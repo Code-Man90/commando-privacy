@@ -148,7 +148,7 @@
         <p>We strictly limit data collection to what is essential for delivering luxury tactical apparel and fulfilling orders:</p>
         <ul>
             <li><strong>Account Credentials:</strong> When you register or sign in using phone verification (OTP), Google Sign-In, or Sign in with Apple, we store your profile identifier, email address, or phone number to authenticate your identity.</li>
-            <li><strong>Foreground Location (While Using App Only):</strong> We only request location access while you actively use the app (foreground) to autofill your delivery address during checkout. <strong>We do not track, collect, or monitor your location in the background.</strong></li>
+            <li><strong>Foreground Location (While Using App Only):</strong> Location access is requested exclusively in the foreground while actively using the app (<code>NSLocationWhenInUse</code>) to autofill your delivery address during checkout. <strong>We do not request, require, or maintain background location access (<code>NSLocationAlways</code>).</strong></li>
             <li><strong>Order & Purchase Information:</strong> Items ordered, sizing, delivery recipient names, delivery address, and order totals necessary for fulfillment.</li>
             <li><strong>Photo Library / Camera:</strong> Optional access strictly granted when you choose to capture or upload an avatar image for your personal profile.</li>
         </ul>
@@ -158,7 +158,7 @@
         <h2>3. Third-Party Services & Secure Data Sharing</h2>
         <p>To ensure high service quality, specific technical interactions occur with trusted third-party providers under strict data privacy safeguards:</p>
         <ul>
-            <li><strong>OpenStreetMap (Nominatim Reverse Geocoding):</strong> When you tap to detect your delivery address, approximate latitude and longitude coordinates are transmitted securely over HTTPS to <code>nominatim.openstreetmap.org</code> solely to convert coordinates into street, neighborhood, and city names. No personal identifiers (such as your name, phone number, email, or account ID) are ever shared with OpenStreetMap.</li>
+            <li><strong>OpenStreetMap (Nominatim Reverse Geocoding):</strong> When you tap to detect your delivery address using GPS, your approximate coordinates are transmitted over secure HTTPS to OpenStreetMap (<code>nominatim.openstreetmap.org</code>) solely to convert coordinates into street and city names. As with standard web requests, OpenStreetMap may receive your device's IP address to fulfill the request. No personal user credentials (such as name, phone number, email, or account ID) are ever shared with OpenStreetMap.</li>
             <li><strong>Supabase Database:</strong> Our primary database and user authentication backend are encrypted and protected by strict Row Level Security (RLS) rules, ensuring users can only read and modify their own personal records.</li>
             <li><strong>Authentication Providers (Apple & Google):</strong> Secure federated single sign-on services that process identity tokens securely without sharing third-party tracking cookies.</li>
             <li><strong>WhatsApp Order Concierge:</strong> Order confirmations may be forwarded via WhatsApp to our official concierge team (+964 750 458 8004) at your explicit request.</li>
@@ -171,21 +171,22 @@
         <h3>Data Retention</h3>
         <ul>
             <li><strong>Account Data:</strong> Your profile details, wishlist, and saved addresses are retained only for as long as your account remains active.</li>
-            <li><strong>Order History:</strong> Completed transaction records are archived securely for up to 1 year solely for accounting, tax, delivery verification, and customer support purposes.</li>
+            <li><strong>Order History:</strong> Completed transaction records are archived securely for up to 1 year solely for accounting, tax compliance, delivery verification, and customer support obligations.</li>
             <li><strong>Location Data:</strong> Geocoding queries are processed in real-time memory and are never retained on persistent tracking logs.</li>
         </ul>
         <h3>Account Deletion</h3>
         <p>You have full autonomy over your personal data. You can permanently delete your account and all associated profile information directly within the app by navigating to <strong>Account &gt; Settings &gt; Delete Account</strong>. Executing this action immediately erases your profile, favorites, address entries, and local credentials from both your device and our servers.</p>
+        <p><strong>Order records are retained up to 1 year even after deletion:</strong> Please note that while all personal profile data is deleted immediately, finalized transaction receipts are retained for up to 1 year even after account deletion solely to fulfill legal accounting and taxation requirements.</p>
     </div>
 
     <div class="card">
         <h2>5. Notifications & Tracking</h2>
-        <p>COMMANDO does not engage in cross-app advertising tracking or background location tracking (Tracking is set to false in our Apple Privacy Manifest). Notifications are strictly limited to necessary order status updates, delivery alerts, and direct service announcements.</p>
+        <p>COMMANDO does not send remote push notifications or maintain background notification tracking. In compliance with Apple privacy standards, tracking is strictly disabled (<code>NSPrivacyTracking: false</code>) in our app's dedicated Apple Privacy Manifest (<code>PrivacyInfo.xcprivacy</code>). Order updates and concierge support are delivered directly in-app or via our verified WhatsApp concierge service.</p>
     </div>
 
     <div class="card">
-        <h2>6. Children's Privacy</h2>
-        <p>COMMANDO is designed for general audiences aged 13 and older (and 18+ for financial transactions and order placement). We do not knowingly solicit or collect personal information from individuals under the age of 13. If we become aware that a child under 13 has provided personal details without verified guardian consent, we will promptly delete that information from our records.</p>
+        <h2>6. Children's Privacy & Age Rating</h2>
+        <p>COMMANDO is designed for general audiences aged 13 and older (and 18+ for financial transactions and order placement). In App Store Connect, this aligns with the standard 12+/13+ age tier. We do not knowingly solicit or collect personal information from individuals under the age of 13. If we become aware that a child under 13 has provided personal details without verified guardian consent, we will promptly delete that information from our records.</p>
     </div>
 
     <div class="card">
@@ -215,7 +216,7 @@
         <p>کۆکردنەوەی زانیارییەکان تەنها لە چوارچێوەی پێداویستییەکانی گەیاندن و خزمەتگوزارییەکانمانە:</p>
         <ul>
             <li><strong>زانیارییەکانی هەژمار:</strong> ئیمەیڵ، ژمارەی مۆبایل، یان ناسنامەی چوونەژوورەوە لە ڕێگەی (Google Sign-In یان Apple ID یان OTP) تەنها بۆ ناسینەوە و پاراستنی هەژمارەکەت بەکاردێن.</li>
-            <li><strong>دیاریکردنی شوێن (تەنها لەکاتی بەکارهێناندا):</strong> ئەپەکە تەنها لە کاتی دیاریکردنی ناونیشانی گەیاندندا داوای شوێنەکەت دەکات. <strong>بە هیچ شێوەیەک بەدواداچوونی شوێن لە پاشبنەمادا (Background Location) ناکرێت.</strong></li>
+            <li><strong>دیاریکردنی شوێن (تەنها لەکاتی بەکارهێناندا):</strong> ئەپەکە تەنها لە کاتی دیاریکردنی ناونیشانی گەیاندندا داوای شوێنەکەت دەکات (<code>NSLocationWhenInUse</code>). <strong>ئەپەکەمان هیچ مۆڵەتێکی شوێنی پاشبنەما (<code>NSLocationAlways</code>) ناخوازێت و بەکاری ناهێنێت.</strong></li>
             <li><strong>زانیاری داواکارییەکان:</strong> جۆری جلوبەرگ، قەبارە، ناونیشانی وەرگرتن، و بڕی پارەدان بۆ مەبەستی جێبەجێکردنی ئۆردەرەکە.</li>
             <li><strong>وێنە و کامێرا:</strong> مۆڵەت تەنها کاتێک وەردەگیرێت کە خۆت بە دەست بیەوێت وێنەی پرۆفایلەکەت دابنێیت.</li>
         </ul>
@@ -225,7 +226,7 @@
         <h2>٣. خزمەتگوزارییەکانی لایەنی سێیەم (Third-Party)</h2>
         <p>بۆ بەجێگەیاندنی داواکارییەکان بە شێوەیەکی دروست، پەیوەندی بە چەند خزمەتگوزارییەکی باوەڕپێکراوەوە دەکرێت:</p>
         <ul>
-            <li><strong>نەخشەی OpenStreetMap (Nominatim):</strong> کاتێک دوگمەی دیاریکردنی ناونیشان بە GPS دادەگریت، هێڵەکانی درێژی و پانی (کۆئۆردینەیت) بە شێوەیەکی پارێزراو بۆ ماڵپەڕی <code>nominatim.openstreetmap.org</code> دەنێردرێت تا ناو و گەڕەک و شاری ناونیشانەکەت دیاری بکرێت. هیچ زانیارییەکی کەسی (وەک ناو، ئیمەیڵ، یان ژمارە مۆبایل) بۆ ئەوان نانێردرێت.</li>
+            <li><strong>نەخشەی OpenStreetMap (Nominatim):</strong> کاتێک دوگمەی دیاریکردنی ناونیشان بە GPS دادەگریت، هێڵەکانی درێژی و پانی بۆ <code>nominatim.openstreetmap.org</code> دەنێردرێت تا ناو و گەڕەک و شاری ناونیشانەکەت دیاری بکرێت. وەک هەموو داواکارییەکی ئینتەرنێت، لەوانەیە OpenStreetMap ناونیشانی IPی ئامێرەکەت ببینێت، بەڵام هیچ زانیارییەکی کەسی (وەک ناو، ئیمەیڵ، یان ژمارە مۆبایل) بۆ ئەوان نانێردرێت.</li>
             <li><strong>بنکەی دراوەی Supabase:</strong> داتاکان لە سێرڤەری پارێزراوی Supabase هەڵدەگیرێن بە بەکارهێنانی یاساکانی Row Level Security (RLS) کە تەنها خاوەنی هەژمار بۆی هەیە داتاکانی خۆی ببینێت و دەستکاری بکات.</li>
             <li><strong>سیستەمی چوونەژوورەوەی Apple و Google:</strong> بۆ مسۆگەرکردنی چوونەژوورەوەیەکی پارێزراو بەبێ بەکارهێنانی سیخوڕی یان فایلی کۆکی لایەنی سێیەم.</li>
             <li><strong>واتس ئەپی فەرمی:</strong> ناردنی داواکاری بۆ ژمارەی فەرمی واتس ئەپ (+964 750 458 8004) تەنها بە ڕەزامەندی و کلیککردنی خۆت ئەنجام دەدرێت.</li>
@@ -242,15 +243,21 @@
         </ul>
         <h3>سڕینەوەی هەژمار (Account Deletion)</h3>
         <p>تۆ خاوەنی تەواوی بڕیاری سڕینەوەی داتاکانتین. لە هەر کاتێکدا دەتوانیت لە ناو ئەپەکەدا بچیتە سەر <strong>هەژمار &gt; ڕێکخستنەکان &gt; سڕینەوەی هەژمار</strong>. بە ئەنجامدانی ئەم کردارە، پرۆفایل، لیستی دڵخوازەکان، ناونیشانەکان و هەموو تۆمارەکانت لە مۆبایلەکەت و سێرڤەرەکەمان بەیەکجاری دەسڕدرێنەوە.</p>
+        <p><strong>تۆماری داواکارییەکان تا ١ ساڵ دەمێننەوە دوای سڕینەوەش:</strong> تکایە ئاگاداربە کە لە کاتێکدا هەموو داتای کەسی دەستبەجێ دەسڕدرێتەوە، وەسڵی داواکاری و کڕینە تەواوکراوەکان بۆ ماوەی تا ١ ساڵ دەمێننەوە تەنها بۆ مەبەستی ژمێریاری، باج و پابەندبوونە یاساییەکان.</p>
     </div>
 
     <div class="card kurdish-section">
-        <h2>٥. پاراستنی منداڵان</h2>
-        <p>ئەپی COMMANDO تایبەتە بە تەمەنی سەروو ١٣ ساڵ (و ١٨ ساڵ بۆ کڕین و پارەدان). بە هیچ شێوەیەک زانیاری لە منداڵانی خوار ١٣ ساڵ کۆناکرێتەوە و لە کاتی ئاگاداربوون لە بوونی داتای لەو شێوەیە دەستبەجێ دەسڕدرێتەوە.</p>
+        <h2>٥. نۆتفکەیشن و چاودێری نێوان ئەپەکان (Tracking)</h2>
+        <p>ئەپی کۆماندۆ هیچ نۆتفکەیشنێکی دووربەدەست (Remote Push) نانێرێت و هیچ پرۆسەیەکی چاودێری لە پاشبنەما ئەنجام نادات. چاودێریکردنی نێوان ئەپەکان بە تەواوی لە پرایڤسی مانفێستی ئەپڵ بە ناچالاک دانراوە (<code>NSPrivacyTracking: false</code> لە پەڕگەی <code>PrivacyInfo.xcprivacy</code>). هەموو زانیاری و بەدواداچوونی داواکارییەکان تەنها لەناو خودی ئەپەکە یان لە ڕێگەی واتس ئەپی فەرمی ئەنجام دەدرێت.</p>
     </div>
 
     <div class="card kurdish-section">
-        <h2>٦. پەیوەندی کردن</h2>
+        <h2>٦. پاراستنی منداڵان و پلەبەندی تەمەن</h2>
+        <p>ئەپی COMMANDO تایبەتە بە تەمەنی سەروو ١٣ ساڵ (و ١٨ ساڵ بۆ کڕین و پارەدان)، کە لە ئەپ ستۆر کۆنێکت لەگەڵ پلەبەندی ستانداردی 12+/13+ دەگونجێت. بە هیچ شێوەیەک زانیاری لە منداڵانی خوار ١٣ ساڵ کۆناکرێتەوە و لە کاتی ئاگاداربوون لە بوونی داتای لەو شێوەیە دەستبەجێ دەسڕدرێتەوە.</p>
+    </div>
+
+    <div class="card kurdish-section">
+        <h2>٧. پەیوەندی کردن</h2>
         <p>بۆ هەر پرسیارێک یان داواکارییەکی تایبەت بە پاراستنی داتاکانت دەتوانیت پەیوەندیمان پێوە بکەیت:</p>
         <ul>
             <li>ئیمەیڵ: <strong><a href="mailto:commandoatelier@gmail.com">commandoatelier@gmail.com</a></strong></li>
