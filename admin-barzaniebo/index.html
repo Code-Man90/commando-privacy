@@ -3991,98 +3991,86 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
     // ==========================================
 
     function sanitizeOrder(o) {
-
       if (!o || typeof o !== 'object') return null;
 
-      let custName = (typeof o.customer === 'string' && o.customer.trim()) ? o.customer.trim() : '';
-
-      let addressStr = (typeof o.address === 'string') ? o.address.trim() : '';
+      let custName = (typeof o.customer_name === 'string' && o.customer_name.trim()) ? o.customer_name.trim() : ((typeof o.customer === 'string' && o.customer.trim()) ? o.customer.trim() : '');
+      let addressStr = (typeof o.delivery_address === 'string' && o.delivery_address.trim()) ? o.delivery_address.trim() : ((typeof o.address === 'string' && o.address.trim()) ? o.address.trim() : '');
+      let rejectionReason = (typeof o.rejection_reason === 'string') ? o.rejection_reason.trim() : '';
+      let userEmail = (typeof o.customer_email === 'string') ? o.customer_email.trim() : '';
 
       let itemsList = [];
-
       let calculatedTotal = 0;
-
       let rawItems = o.items;
 
       if (typeof rawItems === 'string') {
-
         if (rawItems.includes('[object Object]')) {
-
           rawItems = null;
-
         } else {
-
           try {
-
             const parsed = JSON.parse(rawItems);
-
             if (parsed) rawItems = parsed;
-
           } catch (_) {}
-
         }
-
       }
 
+      const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
       if (Array.isArray(rawItems)) {
-
         rawItems.forEach(it => {
-
           if (!it) return;
-
-          if (it.order_meta) {
-
-            if (it.order_meta.customer && (!custName || /[0-9a-f-]{16,}/i.test(custName))) {
-
-              custName = it.order_meta.customer;
-
+          if (typeof it === 'object') {
+            if (it.customer_name && (!custName || uuidRegex.test(custName))) {
+              custName = String(it.customer_name).trim();
+            } else if (it.customer && (!custName || uuidRegex.test(custName))) {
+              custName = String(it.customer).trim();
             }
 
-            if (it.order_meta.address && !addressStr) {
-
-              addressStr = it.order_meta.address;
-
+            if (it.delivery_address && (!addressStr || addressStr === 'ناونیشانی دیارینەکراو')) {
+              addressStr = String(it.delivery_address).trim();
+            } else if (it.address && (!addressStr || addressStr === 'ناونیشانی دیارینەکراو')) {
+              addressStr = String(it.address).trim();
             }
 
-          } else if (typeof it === 'object') {
+            if (it.customer_email && !userEmail) {
+              userEmail = String(it.customer_email).trim();
+            }
+
+            if (it.rejection_reason && !rejectionReason) {
+              rejectionReason = String(it.rejection_reason).trim();
+            }
+
+            if (it.order_meta) {
+              if (it.order_meta.customer && (!custName || uuidRegex.test(custName))) {
+                custName = String(it.order_meta.customer).trim();
+              }
+              if (it.order_meta.address && (!addressStr || addressStr === 'ناونیشانی دیارینەکراو')) {
+                addressStr = String(it.order_meta.address).trim();
+              }
+              if (it.order_meta.email && !userEmail) {
+                userEmail = String(it.order_meta.email).trim();
+              }
+            }
 
             const itName = it.name || it.title || it.product_name || 'کاڵا';
-
             const itQty = parseInt(it.quantity || it.qty || 1, 10) || 1;
-
-            const itSize = it.size ? ` (${it.size})` : '';
-
+            const itSize = (it.size && String(it.size).trim()) ? ' (' + it.size + ')' : '';
+            const itColor = (it.color && String(it.color).trim()) ? ' - ' + it.color : '';
             if (it.price) {
-
               calculatedTotal += (Number(it.price) || 0) * itQty;
-
             }
-
-            itemsList.push(`${itName}${itSize} ×${itQty}`);
-
+            itemsList.push(itName + itSize + itColor + ' ×' + itQty);
           } else if (typeof it === 'string' && it.trim() && !it.includes('[object Object]')) {
-
             itemsList.push(it.trim());
-
           }
-
         });
-
       } else if (typeof rawItems === 'object' && rawItems !== null) {
-
         if (rawItems.name) itemsList.push(rawItems.name);
-
       } else if (typeof rawItems === 'string' && rawItems.trim() && !rawItems.includes('[object Object]')) {
-
         itemsList.push(rawItems.trim());
-
       }
 
       let itemsStr = itemsList.length > 0 ? itemsList.join('، ') : 'پۆشاکی لووکسی کۆماندۆ';
 
-      // Clean customer name: replace raw UUID with clean identifier
-
-      const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
       const phoneClean = (typeof o.phone === 'string') ? o.phone.trim() : '';
       const phoneIsUuid = uuidRegex.test(phoneClean);
 
@@ -4097,39 +4085,27 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
       }
 
       let finalTotal = Number(o.total_price ?? o.total ?? 0);
-
       if (finalTotal <= 0 && calculatedTotal > 0) {
-
         finalTotal = calculatedTotal;
-
       }
-
       if (finalTotal <= 0) {
-
-        finalTotal = 45000; // Luxury order fallback
-
+        finalTotal = 45000;
       }
 
       return {
-
         id: o.id || 'CMD-' + Math.floor(1000 + Math.random() * 9000),
-
+        user_id: o.user_id || '',
         customer: custName,
-
+        email: userEmail,
         phone: o.phone || '',
-
         address: addressStr || 'ناونیشانی دیارینەکراو',
-
         items: itemsStr,
-
+        raw_items: rawItems,
         total: finalTotal,
-
         status: o.status || 'pending',
-
+        rejection_reason: rejectionReason,
         created_at: o.created_at || new Date().toISOString()
-
       };
-
     }
 
     let deletedProductIds = JSON.parse(localStorage.getItem('comando_deleted_products') || '[]');
@@ -5029,16 +5005,42 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
 
     }
 
-    async function updateOrderStatusInSupabase(orderId, status) {
-
+    async function updateOrderStatusInSupabase(orderId, status, rejectionReason) {
       if (!supabaseClient) return;
-
       try {
+        const updatePayload = { status: status };
+        const { data: currentOrder } = await supabaseClient.from('orders').select('*').eq('id', orderId).maybeSingle();
+        if (currentOrder && currentOrder.items && rejectionReason) {
+          let updatedItems = currentOrder.items;
+          if (Array.isArray(updatedItems)) {
+            updatedItems = updatedItems.map(it => {
+              if (typeof it === 'object' && it !== null) {
+                return Object.assign({}, it, { rejection_reason: rejectionReason });
+              }
+              return it;
+            });
+            updatePayload.items = updatedItems;
+          }
+        }
+        await supabaseClient.from('orders').update(updatePayload).eq('id', orderId);
+      } catch (e) {
+        console.error('Error updating order status in Supabase:', e);
+      }
+    }
 
-        await supabaseClient.from('orders').update({ status }).eq('id', orderId);
-
-      } catch (_) {}
-
+    async function sendOrderNotification(title, body) {
+      if (!supabaseClient) return;
+      try {
+        await supabaseClient.from('notifications').insert([{
+          title: title,
+          body: body,
+          category: 'ئۆردەر',
+          is_unread: true,
+          created_at: new Date().toISOString()
+        }]);
+      } catch (err) {
+        console.warn('Failed to insert notification in Supabase:', err);
+      }
     }
 
     async function deleteOrderFromSupabase(orderId) {
@@ -6212,131 +6214,159 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
     // ---------------------------------------------------------------
 
     function renderOrders() {
-
       const tbody = document.getElementById('ordersTableBody');
-
+      if (!tbody) return;
       tbody.innerHTML = '';
-
-      // Auto-sanitize all orders in memory
-
       orders = orders.map(sanitizeOrder).filter(Boolean);
 
       if (orders.length === 0) {
-
         tbody.innerHTML = `
-
           <tr>
-
             <td colspan="8" style="text-align:center; padding:36px; color:var(--text-muted);">
-
               <i class="fa-solid fa-cart-arrow-down" style="font-size:32px; margin-bottom:8px; display:block;"></i>
-
               هیچ داواکارییەک لە ئێستادا نییە. هەر داواکارییەک لە ئەپەوە بنێردرێت لێرە دەردەکەوێت.
-
             </td>
-
           </tr>
-
         `;
-
         return;
-
       }
 
       orders.forEach(ord => {
-
         const tr = document.createElement('tr');
-
         const cleanPhone = (ord.phone || '').replace(/[^0-9]/g, '');
 
-        tr.innerHTML = `
-
-          <td style="font-weight:800; color:var(--gold);">${ord.id}</td>
-
-          <td style="font-weight:700;">${ord.customer}</td>
-
-          <td>
-
-            <a href="tel:${cleanPhone}" style="color:var(--text-muted); text-decoration:none;">
-
-              <i class="fa-solid fa-phone" style="font-size:11px; margin-left:4px;"></i>${ord.phone || '-'}
-
-            </a>
-
-          </td>
-
-          <td style="font-size:12px;">${ord.address || '-'}</td>
-
-          <td style="font-size:12px; max-width:240px;">${ord.items || '-'}</td>
-
-          <td style="font-weight:800; color:var(--gold);">${Number(ord.total).toLocaleString()} د.ع</td>
-
-          <td>
-
-            <select class="form-select" style="padding:4px 8px; font-size:11px;" onchange="updateOrderStatus('${ord.id}', this.value)">
-
-              <option value="pending" ${ord.status==='pending'?'selected':''}>لە چاوەڕوانیدا</option>
-
-              <option value="shipping" ${ord.status==='shipping'?'selected':''}>لە ڕێگایە (Shipping)</option>
-
-              <option value="completed" ${ord.status==='completed'?'selected':''}>گەیەندرا (Delivered)</option>
-
-              <option value="cancelled" ${ord.status==='cancelled'?'selected':''}>هەڵوەشاوەتەوە</option>
-
-            </select>
-
-          </td>
-
-          <td>
-
-            <div style="display:flex; gap:6px;">
-
-              ${cleanPhone ? `
-
-                <a href="https://wa.me/${cleanPhone}?text=${encodeURIComponent('سڵاو بەڕێز ' + ord.customer + ' لە پەیوەندی داواکارییەکەت لە COMANDO: ' + ord.id)}" target="_blank" class="btn-action" style="padding:5px 8px; display:inline-flex;" title="پەیام لە WhatsApp">
-
-                  <i class="fa-brands fa-whatsapp" style="color:#25D366;"></i>
-
-                </a>
-
-              ` : ''}
-
-              <button class="btn-action delete" style="padding:5px 8px;" onclick="deleteOrder('${ord.id}')" title="سڕینەوەی داواکاری">
-
-                <i class="fa-solid fa-trash"></i>
-
-              </button>
-
+        let statusBadge = '';
+        if (ord.status === 'accepted') {
+          statusBadge = `
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <span class="badge" style="background:rgba(34,197,94,0.18); color:#22c55e; border:1px solid rgba(34,197,94,0.4); padding:5px 10px; border-radius:8px; font-weight:700; font-size:11.5px; display:inline-flex; align-items:center; gap:6px;">
+                <i class="fa-solid fa-truck-fast"></i> قبووڵکراوە
+              </span>
+              <span style="font-size:10.5px; color:#4ade80;">دەگاتە دەستت لەم چەند ڕۆژە 🚚</span>
             </div>
+          `;
+        } else if (ord.status === 'rejected') {
+          statusBadge = `
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <span class="badge" style="background:rgba(239,68,68,0.18); color:#ef4444; border:1px solid rgba(239,68,68,0.4); padding:5px 10px; border-radius:8px; font-weight:700; font-size:11.5px; display:inline-flex; align-items:center; gap:6px;">
+                <i class="fa-solid fa-circle-xmark"></i> ڕەتکراوەتەوە
+              </span>
+              ${ord.rejection_reason ? `<span style="font-size:10.5px; color:#f87171; max-width:180px; word-break:break-word;">هۆکار: ${ord.rejection_reason}</span>` : ''}
+            </div>
+          `;
+        } else if (ord.status === 'shipping') {
+          statusBadge = `
+            <span class="badge" style="background:rgba(59,130,246,0.18); color:#3b82f6; border:1px solid rgba(59,130,246,0.4); padding:5px 10px; border-radius:8px; font-weight:700; font-size:11.5px; display:inline-flex; align-items:center; gap:6px;">
+              <i class="fa-solid fa-box"></i> لە ڕێگایە (Shipping)
+            </span>
+          `;
+        } else if (ord.status === 'completed') {
+          statusBadge = `
+            <span class="badge" style="background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.4); padding:5px 10px; border-radius:8px; font-weight:700; font-size:11.5px; display:inline-flex; align-items:center; gap:6px;">
+              <i class="fa-solid fa-circle-check"></i> گەیەندراوە (Delivered)
+            </span>
+          `;
+        } else {
+          statusBadge = `
+            <span class="badge" style="background:rgba(234,179,8,0.18); color:#eab308; border:1px solid rgba(234,179,8,0.4); padding:5px 10px; border-radius:8px; font-weight:700; font-size:11.5px; display:inline-flex; align-items:center; gap:6px;">
+              <i class="fa-solid fa-clock"></i> لە چاوەڕوانیدا (Pending)
+            </span>
+          `;
+        }
 
+        tr.innerHTML = `
+          <td style="font-weight:800; color:var(--gold); font-size:12px;">${ord.id}</td>
+          <td style="font-weight:700; color:#fff;">
+            <div>${ord.customer}</div>
+            ${ord.email ? `<div style="font-size:11px; color:var(--text-muted); font-weight:normal;">${ord.email}</div>` : ''}
           </td>
-
+          <td>
+            <a href="tel:${cleanPhone}" style="color:var(--text-muted); text-decoration:none; font-weight:600;">
+              <i class="fa-solid fa-phone" style="font-size:11px; margin-left:4px; color:var(--gold);"></i>${ord.phone || '-'}
+            </a>
+          </td>
+          <td style="font-size:12px; color:#e2e8f0; max-width:200px; line-height:1.4;">
+            <i class="fa-solid fa-location-dot" style="color:#ef4444; margin-left:4px;"></i>${ord.address || '-'}
+          </td>
+          <td style="font-size:12px; max-width:240px; color:#cbd5e1; line-height:1.4;">${ord.items || '-'}</td>
+          <td style="font-weight:800; color:var(--gold); font-size:13px; white-space:nowrap;">${Number(ord.total).toLocaleString()} د.ع</td>
+          <td style="min-width:160px;">
+            ${statusBadge}
+            <div style="margin-top:6px;">
+              <select class="form-select" style="padding:3px 6px; font-size:11px;" onchange="updateOrderStatus('${ord.id}', this.value)">
+                <option value="pending" ${ord.status==='pending'?'selected':''}>لە چاوەڕوانیدا</option>
+                <option value="accepted" ${ord.status==='accepted'?'selected':''}>قبووڵکراو (دەگاتە دەستت)</option>
+                <option value="shipping" ${ord.status==='shipping'?'selected':''}>لە ڕێگایە (Shipping)</option>
+                <option value="completed" ${ord.status==='completed'?'selected':''}>گەیەندراوە (Delivered)</option>
+                <option value="rejected" ${ord.status==='rejected'?'selected':''}>ڕەتکراوەتەوە (Rejected)</option>
+                <option value="cancelled" ${ord.status==='cancelled'?'selected':''}>هەڵوەشاوەتەوە</option>
+              </select>
+            </div>
+          </td>
+          <td>
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <button class="btn-action" onclick="acceptOrder('${ord.id}')" style="background:rgba(34,197,94,0.2); color:#22c55e; border:1px solid rgba(34,197,94,0.5); padding:6px 10px; font-size:11.5px; font-weight:bold; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="قبووڵکردنی داواکاری">
+                <i class="fa-solid fa-check"></i> قبووڵکردن
+              </button>
+              <button class="btn-action" onclick="rejectOrder('${ord.id}')" style="background:rgba(239,68,68,0.2); color:#ef4444; border:1px solid rgba(239,68,68,0.5); padding:6px 10px; font-size:11.5px; font-weight:bold; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="ڕەتکردنەوە بە هۆکار">
+                <i class="fa-solid fa-xmark"></i> ڕەتکردنەوە
+              </button>
+              ${cleanPhone ? `
+                <a href="https://wa.me/${cleanPhone}?text=${encodeURIComponent('سڵاو بەڕێز ' + ord.customer + ' لە پەیوەندی داواکارییەکەت لە COMANDO: ' + ord.id)}" target="_blank" class="btn-action" style="padding:6px 8px; display:inline-flex; border-radius:8px;" title="پەیام لە WhatsApp">
+                  <i class="fa-brands fa-whatsapp" style="color:#25D366; font-size:14px;"></i>
+                </a>
+              ` : ''}
+              <button class="btn-action delete" style="padding:6px 8px; border-radius:8px;" onclick="deleteOrder('${ord.id}')" title="سڕینەوەی داواکاری">
+                <i class="fa-solid fa-trash" style="font-size:12px;"></i>
+              </button>
+            </div>
+          </td>
         `;
-
         tbody.appendChild(tr);
-
       });
+    }
 
+    async function acceptOrder(orderId) {
+      const ord = orders.find(x => x.id === orderId);
+      if (!ord) return;
+      ord.status = 'accepted';
+      saveState();
+      renderOrders();
+      await updateOrderStatusInSupabase(orderId, 'accepted');
+      await sendOrderNotification(
+        'ئۆردەرەکەت قبووڵکرا! 🚚',
+        'داواکارییەکەت قبووڵکراوە و ئامادەکراوە، لەم چەند ڕۆژەدا دەگاتە دەستت.'
+      );
+      showToast('ئۆردەرەکە بە سەرکەوتوویی قبووڵکرا و نۆتیفیکەیشن بە کڕیار گەیشت ✓', 'success');
+    }
+
+    async function rejectOrder(orderId) {
+      const ord = orders.find(x => x.id === orderId);
+      if (!ord) return;
+      const reason = prompt('تکایە هۆکاری ڕەتکردنەوە بنووسە (بۆ کڕیار دەنێردرێت):', 'تەواوبوونی ستۆک یان کێشەی گەیاندن');
+      if (reason === null) return;
+      const finalReason = reason.trim() || 'بەهۆی نەبوونی بەرهەم لە کۆگا';
+      ord.status = 'rejected';
+      ord.rejection_reason = finalReason;
+      saveState();
+      renderOrders();
+      await updateOrderStatusInSupabase(orderId, 'rejected', finalReason);
+      await sendOrderNotification(
+        'داواکارییەکەت ڕەتکرایەوە ⚠️',
+        'داواکاری (# ' + orderId.slice(0, 8) + ') ڕەتکرایەوە. هۆکار: ' + finalReason
+      );
+      showToast('داواکاری ڕەتکرایەوە و هۆکارەکەی بۆ کڕیار نێردرا ✓', 'info');
     }
 
     function updateOrderStatus(orderId, newStatus) {
-
       const ord = orders.find(x => x.id === orderId);
-
       if (ord) {
-
         ord.status = newStatus;
-
         saveState();
-
         renderOrders();
-
         updateOrderStatusInSupabase(orderId, newStatus);
-
         showToast('دۆخی داواکاری نوێکرایەوە ✓', 'info');
-
       }
-
     }
 
     async function deleteOrder(orderId) {
