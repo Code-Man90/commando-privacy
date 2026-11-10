@@ -5028,16 +5028,36 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
       }
     }
 
-    async function sendOrderNotification(title, body) {
+    async function sendOrderNotification(payload) {
       if (!supabaseClient) return;
       try {
-        await supabaseClient.from('notifications').insert([{
-          title: title,
-          body: body,
-          category: 'ئۆردەر',
-          is_unread: true,
-          created_at: new Date().toISOString()
-        }]);
+        let insertObj = {};
+        if (typeof payload === 'string') {
+          insertObj = {
+            title: arguments[0] || 'ئاگاداری',
+            body: arguments[1] || '',
+            category: 'ئۆردەر',
+            is_unread: true,
+            created_at: new Date().toISOString()
+          };
+        } else {
+          insertObj = Object.assign({
+            category: 'ئۆردەر',
+            is_unread: true,
+            created_at: new Date().toISOString()
+          }, payload);
+        }
+        const res = await supabaseClient.from('notifications').insert([insertObj]);
+        if (res.error) {
+          // Fallback to basic columns if custom columns not defined
+          await supabaseClient.from('notifications').insert([{
+            title: insertObj.title || 'ئاگاداری',
+            body: insertObj.body || '',
+            category: insertObj.category || 'ئۆردەر',
+            is_unread: true,
+            created_at: new Date().toISOString()
+          }]);
+        }
       } catch (err) {
         console.warn('Failed to insert notification in Supabase:', err);
       }
@@ -6333,10 +6353,17 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
       saveState();
       renderOrders();
       await updateOrderStatusInSupabase(orderId, 'accepted');
-      await sendOrderNotification(
-        'ئۆردەرەکەت قبووڵکرا! 🚚',
-        'داواکارییەکەت قبووڵکراوە و ئامادەکراوە، لەم چەند ڕۆژەدا دەگاتە دەستت.'
-      );
+      await sendOrderNotification({
+        title: 'ئۆردەرەکەت قبووڵکرا! 🚚',
+        title_en: 'Order Accepted! 🚚',
+        title_ar: 'تم قبول طلبك! 🚚',
+        body: 'داواکارییەکەت (#' + orderId.slice(0, 8) + ') قبووڵکراوە و ئامادەکراوە، لەم چەند ڕۆژەدا دەگاتە دەستت.',
+        body_en: 'Your order (#' + orderId.slice(0, 8) + ') has been approved and prepared. It will arrive in a few days.',
+        body_ar: 'تم قبول طلبك (#' + orderId.slice(0, 8) + ') وتجهيزه وسوف يصلك خلال هذه الأيام.',
+        category: 'ئۆردەر',
+        category_en: 'Order',
+        category_ar: 'طلب'
+      });
       showToast('ئۆردەرەکە بە سەرکەوتوویی قبووڵکرا و نۆتیفیکەیشن بە کڕیار گەیشت ✓', 'success');
     }
 
@@ -6351,10 +6378,17 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
       saveState();
       renderOrders();
       await updateOrderStatusInSupabase(orderId, 'rejected', finalReason);
-      await sendOrderNotification(
-        'داواکارییەکەت ڕەتکرایەوە ⚠️',
-        'داواکاری (# ' + orderId.slice(0, 8) + ') ڕەتکرایەوە. هۆکار: ' + finalReason
-      );
+      await sendOrderNotification({
+        title: 'داواکارییەکەت ڕەتکرایەوە ⚠️',
+        title_en: 'Order Declined ⚠️',
+        title_ar: 'تم رفض الطلب ⚠️',
+        body: 'داواکاری (#' + orderId.slice(0, 8) + ') ڕەتکرایەوە. هۆکار: ' + finalReason,
+        body_en: 'Your order (#' + orderId.slice(0, 8) + ') was declined. Reason: ' + finalReason,
+        body_ar: 'تم رفض طلبك (#' + orderId.slice(0, 8) + '). السبب: ' + finalReason,
+        category: 'ئۆردەر',
+        category_en: 'Order',
+        category_ar: 'طلب'
+      });
       showToast('داواکاری ڕەتکرایەوە و هۆکارەکەی بۆ کڕیار نێردرا ✓', 'info');
     }
 
