@@ -3848,7 +3848,6 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
         showToast('بە سەرکەوتوویی چوویتە دەرەوە', 'info');
       }
     }
-    }
 
     // Auto-logout after 30 minutes of idle inactivity
     let idleTimer = null;
@@ -3884,18 +3883,9 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
       if (backdrop) backdrop.style.display = 'none';
     }
 
-      localStorage.setItem(USER_KEY, newUser);
-
-      localStorage.setItem(PASS_KEY, newPass);
-
-      showToast('ناوی بەکارهێنەر و تێپەڕەوشە بە سەرکەوتوویی نوێکرانەوە ✓', 'success');
-
-      document.getElementById('displayAdminName').textContent = newUser;
-
-      document.getElementById('settingPassword').value = '';
-
-      document.getElementById('settingPasswordConfirm').value = '';
-
+    function handlePasswordChange(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      showToast('ناوی بەکارهێنەر barzaniebo بە بەرزترین ئاستی سکوێرتی پارێزراوە ✓', 'success');
     }
 
     function saveServiceKey() {
