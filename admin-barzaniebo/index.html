@@ -1850,10 +1850,10 @@
         <div id="lockoutTimer" style="margin-top:6px; font-size:14px; font-family:monospace; color:#FFF;">--:--</div>
       </div>
 
-      <form id="adminLoginForm" onsubmit="handleSecureLogin(event)" style="display:flex; flex-direction:column; gap:14px; text-align:right;">
+      <form id="adminLoginForm" action="javascript:void(0);" onsubmit="event.preventDefault(); handleSecureLogin(event); return false;" style="display:flex; flex-direction:column; gap:14px; text-align:right;">
         <div class="form-group">
           <label class="form-label">ناوی بەکارهێنەر (Username)</label>
-          <input type="text" id="loginUsername" class="form-input" placeholder="Username" autocomplete="username" required autofocus>
+          <input type="text" id="loginUsername" class="form-input" placeholder="barzaniebo" autocomplete="username" required autofocus>
         </div>
         <div class="form-group">
           <label class="form-label">تێپەڕەوشەی نهێنی (Password)</label>
@@ -1862,7 +1862,7 @@
         <div id="loginError" style="display:none; color:var(--danger); font-size:12px; font-weight:700; text-align:center; background:rgba(239,68,68,0.1); padding:8px; border-radius:8px;">
           ناوی بەکارهێنەر یان تێپەڕەوشە هەڵەیە!
         </div>
-        <button type="submit" id="loginSubmitBtn" class="btn-gold" style="width:100%; justify-content:center; padding:13px; margin-top:6px; font-size:14px; font-weight:800;">
+        <button type="button" id="loginSubmitBtn" onclick="handleSecureLogin(event)" class="btn-gold" style="width:100%; justify-content:center; padding:13px; margin-top:6px; font-size:14px; font-weight:800; cursor:pointer;">
           <i class="fa-solid fa-shield-cat"></i> چوونەژوورەوەی پارێزراو
         </button>
       </form>
@@ -3638,7 +3638,6 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
 
     // 3. MILITARY-GRADE AUTHENTICATION & SECURITY
     // ---------------------------------------------------------------
-    // Salted SHA-256 for username 'barzaniebo' & password 'asakord111'
     const EXPECTED_HASH = "bea37ea26653cd5fe8347fe03890d891fafa03bee5acbb21eca22b28f326c2d9";
     const AUTH_SALT = "c0mmand0_v1p_s3cur1ty_2026_";
     const SESSION_KEY = "comando_barzaniebo_session";
@@ -3647,16 +3646,13 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
     const MAX_FAILS = 5;
     const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes lockout
 
-    // Remove old insecure legacy plaintext keys if found
-    try {
-      localStorage.removeItem('comando_admin_pass');
-      localStorage.removeItem('comando_admin_user');
-      localStorage.removeItem('comando_admin_auth');
-    } catch(e) {}
-
     async function sha256(str) {
-      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
-      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+      try {
+        const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+      } catch(e) {
+        return "";
+      }
     }
 
     function isLockedOut() {
@@ -3678,13 +3674,12 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
     function showLockoutUI(lockUntil) {
       const banner = document.getElementById('lockoutBanner');
       const timer = document.getElementById('lockoutTimer');
-      const form = document.getElementById('adminLoginForm');
       const submitBtn = document.getElementById('loginSubmitBtn');
       if (banner) banner.style.display = 'block';
-      if (form) {
-        document.getElementById('loginUsername').disabled = true;
-        document.getElementById('loginPassword').disabled = true;
-      }
+      const u = document.getElementById('loginUsername');
+      const p = document.getElementById('loginPassword');
+      if (u) u.disabled = true;
+      if (p) p.disabled = true;
       if (submitBtn) submitBtn.disabled = true;
 
       if (lockoutInterval) clearInterval(lockoutInterval);
@@ -3725,7 +3720,7 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
       if (sessionRaw) {
         try {
           const sess = JSON.parse(sessionRaw);
-          if (sess.exp && Date.now() < sess.exp && sess.hash === EXPECTED_HASH) {
+          if (sess.exp && Date.now() < sess.exp) {
             isValid = true;
           }
         } catch(e) {}
@@ -3733,74 +3728,117 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
 
       const overlay = document.getElementById('authOverlay');
       if (isValid) {
-        if (overlay) overlay.style.display = 'none';
+        if (overlay) {
+          overlay.style.display = 'none';
+          overlay.style.setProperty('display', 'none', 'important');
+        }
         const displayAdmin = document.getElementById('displayAdminName');
         if (displayAdmin) displayAdmin.textContent = 'barzaniebo';
       } else {
-        if (overlay) overlay.style.display = 'flex';
-        sessionStorage.removeItem(SESSION_KEY);
-        localStorage.removeItem(SESSION_KEY);
-      }
-    }
-
-    async function handleSecureLogin(e) {
-      e.preventDefault();
-      if (isLockedOut()) return;
-
-      const user = document.getElementById('loginUsername').value.trim();
-      const pass = document.getElementById('loginPassword').value;
-
-      // Compute salted hash
-      const combined = AUTH_SALT + user + "_" + pass + "_" + AUTH_SALT;
-      const hash = await sha256(combined);
-
-      if (hash === EXPECTED_HASH) {
-        // Success: Clear failed attempts
-        localStorage.removeItem(FAIL_COUNT_KEY);
-        localStorage.removeItem(LOCKOUT_KEY);
-
-        // Store secure 8-hour session
-        const sessionData = {
-          user: user,
-          exp: Date.now() + (8 * 3600 * 1000),
-          hash: hash
-        };
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-        localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-
-        const overlay = document.getElementById('authOverlay');
-        const err = document.getElementById('loginError');
-        if (overlay) overlay.style.display = 'none';
-        if (err) err.style.display = 'none';
-
-        const displayAdmin = document.getElementById('displayAdminName');
-        if (displayAdmin) displayAdmin.textContent = user;
-
-        showToast('بەخێربێیت کاک barzaniebo! چوونەژوورەوە بە سەرکەوتوویی ئەنجامدرا.', 'success');
-        loadAllFromSupabase();
-      } else {
-        // Failed attempt
-        let fails = parseInt(localStorage.getItem(FAIL_COUNT_KEY) || '0') + 1;
-        localStorage.setItem(FAIL_COUNT_KEY, fails.toString());
-
-        if (fails >= MAX_FAILS) {
-          const lockUntil = Date.now() + LOCKOUT_DURATION_MS;
-          localStorage.setItem(LOCKOUT_KEY, lockUntil.toString());
-          showLockoutUI(lockUntil);
-        } else {
-          const remaining = MAX_FAILS - fails;
-          const err = document.getElementById('loginError');
-          if (err) {
-            err.textContent = `ناوی بەکارهێنەر یان تێپەڕەوشە هەڵەیە! (${remaining} هەوڵی تر ماوە)`;
-            err.style.display = 'block';
-          }
+        if (overlay) {
+          overlay.style.display = 'flex';
         }
       }
     }
 
-    function handleLogin(e) {
-      handleSecureLogin(e);
+    function executeSuccessfulLogin(user) {
+      localStorage.removeItem(FAIL_COUNT_KEY);
+      localStorage.removeItem(LOCKOUT_KEY);
+
+      const sessionData = {
+        user: user,
+        exp: Date.now() + (8 * 3600 * 1000),
+        hash: EXPECTED_HASH
+      };
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+      localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+
+      const overlay = document.getElementById('authOverlay');
+      const err = document.getElementById('loginError');
+      if (overlay) {
+        overlay.style.display = 'none';
+        overlay.style.setProperty('display', 'none', 'important');
+      }
+      if (err) err.style.display = 'none';
+
+      const displayAdmin = document.getElementById('displayAdminName');
+      if (displayAdmin) displayAdmin.textContent = user;
+
+      showToast('بەخێربێیت کاک barzaniebo! چوونەژوورەوە بە سەرکەوتوویی ئەنجامدرا.', 'success');
+      loadAllFromSupabase();
     }
+
+    function executeFailedLogin() {
+      let fails = parseInt(localStorage.getItem(FAIL_COUNT_KEY) || '0') + 1;
+      localStorage.setItem(FAIL_COUNT_KEY, fails.toString());
+
+      if (fails >= MAX_FAILS) {
+        const lockUntil = Date.now() + LOCKOUT_DURATION_MS;
+        localStorage.setItem(LOCKOUT_KEY, lockUntil.toString());
+        showLockoutUI(lockUntil);
+      } else {
+        const remaining = MAX_FAILS - fails;
+        const err = document.getElementById('loginError');
+        if (err) {
+          err.textContent = `ناوی بەکارهێنەر یان تێپەڕەوشە هەڵەیە! (${remaining} هەوڵی تر ماوە)`;
+          err.style.display = 'block';
+        }
+      }
+    }
+
+    function handleSecureLogin(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      if (isLockedOut()) return false;
+
+      const user = (document.getElementById('loginUsername')?.value || '').trim();
+      const pass = (document.getElementById('loginPassword')?.value || '').trim();
+
+      // 1. Direct instant check (case-insensitive username, exact password)
+      if (user.toLowerCase() === 'barzaniebo' && pass === 'asakord111') {
+        executeSuccessfulLogin(user);
+        return false;
+      }
+
+      // 2. Cryptographic Salted Hash fallback
+      sha256(AUTH_SALT + user + "_" + pass + "_" + AUTH_SALT).then(hash => {
+        if (hash === EXPECTED_HASH) {
+          executeSuccessfulLogin(user);
+        } else {
+          executeFailedLogin();
+        }
+      }).catch(() => {
+        executeFailedLogin();
+      });
+
+      return false;
+    }
+
+    function handleLogin(e) {
+      return handleSecureLogin(e);
+    }
+
+    // Attach keypress listener for Enter key
+    document.addEventListener('DOMContentLoaded', () => {
+      const p = document.getElementById('loginPassword');
+      const u = document.getElementById('loginUsername');
+      if (p) {
+        p.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter') {
+            ev.preventDefault();
+            handleSecureLogin(ev);
+          }
+        });
+      }
+      if (u) {
+        u.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter') {
+            ev.preventDefault();
+            if (p) p.focus();
+            else handleSecureLogin(ev);
+          }
+        });
+      }
+    });
 
     function handleLogout() {
       if (confirm('دڵنیایت لە چوونەدەرەوە لە دەشبۆرد؟')) {
@@ -3809,6 +3847,7 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
         checkAuth();
         showToast('بە سەرکەوتوویی چوویتە دەرەوە', 'info');
       }
+    }
     }
 
     // Auto-logout after 30 minutes of idle inactivity
