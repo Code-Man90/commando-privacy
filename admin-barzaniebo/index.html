@@ -3999,6 +3999,7 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
       let userEmail = (typeof o.customer_email === 'string') ? o.customer_email.trim() : '';
 
       let itemsList = [];
+      let detailedItems = [];
       let calculatedTotal = 0;
       let rawItems = o.items;
 
@@ -4053,12 +4054,26 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
 
             const itName = it.name || it.title || it.product_name || 'کاڵا';
             const itQty = parseInt(it.quantity || it.qty || 1, 10) || 1;
-            const itSize = (it.size && String(it.size).trim()) ? ' (' + it.size + ')' : '';
-            const itColor = (it.color && String(it.color).trim()) ? ' - ' + it.color : '';
+            const itSizeRaw = (it.size || it.selectedSize || '').toString().trim();
+            const itColorRaw = (it.color || it.selectedColor || '').toString().trim();
+            const itPrice = Number(it.price || 0);
+
+            detailedItems.push({
+              name: itName,
+              quantity: itQty,
+              size: itSizeRaw,
+              color: itColorRaw,
+              price: itPrice
+            });
+
+            let variantParts = [];
+            if (itSizeRaw) variantParts.push('قیاس: ' + itSizeRaw);
+            if (itColorRaw) variantParts.push('ڕەنگ: ' + itColorRaw);
+            const variantStr = variantParts.length > 0 ? ' (' + variantParts.join('، ') + ')' : '';
             if (it.price) {
               calculatedTotal += (Number(it.price) || 0) * itQty;
             }
-            itemsList.push(itName + itSize + itColor + ' ×' + itQty);
+            itemsList.push(itName + variantStr + ' ×' + itQty);
           } else if (typeof it === 'string' && it.trim() && !it.includes('[object Object]')) {
             itemsList.push(it.trim());
           }
@@ -4100,6 +4115,7 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
         phone: o.phone || '',
         address: addressStr || 'ناونیشانی دیارینەکراو',
         items: itemsStr,
+        detailed_items: detailedItems,
         raw_items: rawItems,
         total: finalTotal,
         status: o.status || 'pending',
@@ -6254,6 +6270,23 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
       orders.forEach(ord => {
         const tr = document.createElement('tr');
         const cleanPhone = (ord.phone || '').replace(/[^0-9]/g, '');
+        let itemsHtml = '';
+        if (Array.isArray(ord.detailed_items) && ord.detailed_items.length > 0) {
+          itemsHtml = ord.detailed_items.map(it => `
+            <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(212,175,55,0.3); border-radius:8px; padding:7px 10px; margin-bottom:6px; box-shadow:0 2px 6px rgba(0,0,0,0.25);">
+              <div style="font-weight:700; color:#fff; font-size:13px; display:flex; align-items:center; justify-content:space-between; gap:6px;">
+                <span><i class="fa-solid fa-shirt" style="color:var(--gold); margin-left:5px;"></i>${it.name}</span>
+                <span style="font-size:11px; color:#fbbf24; font-weight:800; background:rgba(212,175,55,0.15); padding:2px 7px; border-radius:5px;">×${it.quantity} دانە</span>
+              </div>
+              <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; font-size:11px;">
+                ${it.size ? `<span style="background:rgba(234,179,8,0.18); color:#fef08a; padding:2px 8px; border-radius:5px; font-weight:700; border:1px solid rgba(234,179,8,0.4); display:inline-flex; align-items:center;"><i class="fa-solid fa-ruler-combined" style="margin-left:4px; color:#eab308;"></i>قیاس: ${it.size}</span>` : ''}
+                ${it.color ? `<span style="background:rgba(59,130,246,0.18); color:#93c5fd; padding:2px 8px; border-radius:5px; font-weight:700; border:1px solid rgba(59,130,246,0.4); display:inline-flex; align-items:center;"><i class="fa-solid fa-palette" style="margin-left:4px; color:#60a5fa;"></i>ڕەنگ: ${it.color}</span>` : ''}
+              </div>
+            </div>
+          `).join('');
+        } else {
+          itemsHtml = `<div style="color:#cbd5e1; font-size:12px; font-weight:600;">${ord.items || '-'}</div>`;
+        }
 
         let statusBadge = '';
         if (ord.status === 'accepted') {
@@ -6308,7 +6341,7 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
           <td style="font-size:12px; color:#e2e8f0; max-width:200px; line-height:1.4;">
             <i class="fa-solid fa-location-dot" style="color:#ef4444; margin-left:4px;"></i>${ord.address || '-'}
           </td>
-          <td style="font-size:12px; max-width:240px; color:#cbd5e1; line-height:1.4;">${ord.items || '-'}</td>
+          <td style="font-size:12px; min-width:220px; max-width:320px; line-height:1.4;">${itemsHtml}</td>
           <td style="font-weight:800; color:var(--gold); font-size:13px; white-space:nowrap;">${Number(ord.total).toLocaleString()} د.ع</td>
           <td style="min-width:160px;">
             ${statusBadge}
