@@ -25,7 +25,21 @@
 
   <!-- Supabase JS CDN -->
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    // Multi-owner live synchronization: periodic silent poll (every 8s) & visibility sync
+    setInterval(() => {
+      if (supabaseClient && document.visibilityState === 'visible') {
+        loadAllFromSupabase(true);
+      }
+    }, 8000);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && supabaseClient) {
+        loadAllFromSupabase(true);
+      }
+    });
+
+  </script>
 
   <style>
 
@@ -1800,6 +1814,687 @@
       }
     }
 
+  
+    /* ============================================================== */
+    /* CREATIVE MODERN UI & MOBILE-FIRST ENHANCEMENTS                */
+    /* ============================================================== */
+    
+    :root {
+      --bg: #12100F;
+      --card-bg: #1C1917;
+      --card-hover: #262220;
+      --primary: #2D2928;
+      --gold: #C49B66;
+      --gold-light: #E8C88A;
+      --gold-dim: rgba(196, 155, 102, 0.15);
+      --text: #F5EFE6;
+      --text-muted: #A89F96;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-light: rgba(196, 155, 102, 0.22);
+      --danger: #EF4444;
+      --success: #10B981;
+      --info: #3B82F6;
+      --warning: #F59E0B;
+      --radius-card: 22px;
+      --radius-pill: 9999px;
+    }
+
+    /* Soft modern rounded cards */
+    .stat-card {
+      background: var(--card-bg) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: var(--radius-card) !important;
+      padding: 22px 20px !important;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35) !important;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .stat-card:hover {
+      border-color: var(--border-light) !important;
+      transform: translateY(-3px) !important;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    .dashboard-panel {
+      background: var(--card-bg) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: var(--radius-card) !important;
+      padding: 24px !important;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35) !important;
+      margin-bottom: 24px !important;
+    }
+
+    .product-item {
+      background: var(--card-bg) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: var(--radius-card) !important;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.25s ease !important;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important;
+    }
+    .product-item:hover {
+      border-color: var(--gold) !important;
+      transform: translateY(-3px) !important;
+      box-shadow: 0 14px 32px rgba(0,0,0,0.5) !important;
+    }
+
+    /* Mobile Topbar */
+    .mobile-topbar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(22, 19, 18, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      width: 100%;
+    }
+    .mobile-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .mobile-brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--gold), #8A6431);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #12100F;
+      font-size: 18px;
+      box-shadow: 0 4px 14px rgba(196, 155, 102, 0.35);
+    }
+    .mob-sync-live {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #10B981;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 11px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+    .mob-sync-polling {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #F59E0B;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 11px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+    .mob-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 6px currentColor;
+      animation: pulse 1.8s infinite;
+    }
+
+    /* Floating Bottom Dock (Creative UI Inspiration) */
+    .mobile-floating-dock {
+      display: none;
+    }
+
+    /* Action Bottom Sheets */
+    .sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 1005;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .sheet-backdrop.show {
+      display: block;
+      opacity: 1;
+    }
+
+    .action-bottom-sheet {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #1C1917;
+      border-top: 1px solid var(--border-light);
+      border-radius: 28px 28px 0 0;
+      padding: 16px 20px calc(24px + env(safe-area-inset-bottom, 0px)) 20px;
+      z-index: 1010;
+      box-shadow: 0 -15px 45px rgba(0,0,0,0.7);
+      transform: translateY(105%);
+      transition: transform 0.32s cubic-bezier(0.34, 1.3, 0.64, 1);
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    .action-bottom-sheet.show {
+      transform: translateY(0);
+    }
+    .sheet-handle {
+      width: 44px;
+      height: 5px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.2);
+      margin: 0 auto 16px auto;
+      cursor: pointer;
+    }
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .sheet-header-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(99, 102, 241, 0.15);
+      color: #818CF8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sheet-close-btn {
+      background: rgba(255,255,255,0.06);
+      border: none;
+      color: var(--text-muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .sheet-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .sheet-action-card {
+      background: #25211F;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      text-align: right;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .sheet-action-card:active {
+      transform: scale(0.96);
+      background: var(--card-hover);
+      border-color: var(--gold);
+    }
+    .sheet-icon-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+    .sheet-icon-circle.blue {
+      background: rgba(99, 102, 241, 0.15);
+      color: #818CF8;
+    }
+    .sheet-icon-circle.green {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34D399;
+    }
+    .sheet-icon-circle.orange {
+      background: rgba(249, 115, 22, 0.15);
+      color: #FB923C;
+    }
+    .sheet-icon-circle.gold {
+      background: rgba(196, 155, 102, 0.15);
+      color: var(--gold-light);
+    }
+    .sheet-action-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .sheet-action-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #FFF;
+    }
+    .sheet-action-desc {
+      font-size: 10.5px;
+      color: var(--text-muted);
+    }
+
+    .mobile-menu-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .mob-menu-btn {
+      background: #25211F;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text);
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      width: 100%;
+      text-align: right;
+    }
+    .mob-menu-btn:active {
+      background: var(--card-hover);
+      border-color: var(--gold);
+      transform: scale(0.98);
+    }
+    .mob-menu-btn i {
+      font-size: 16px;
+      width: 22px;
+      text-align: center;
+    }
+    .mob-menu-badge {
+      margin-right: auto;
+      background: var(--gold);
+      color: #12100F;
+      font-size: 10.5px;
+      font-weight: 900;
+      padding: 1px 7px;
+      border-radius: 12px;
+    }
+    .mob-menu-btn.logout {
+      margin-top: 6px;
+      border-color: rgba(239, 68, 68, 0.25);
+      background: rgba(239, 68, 68, 0.08);
+    }
+
+    /* Orders Views */
+    .mobile-orders-container {
+      display: none;
+    }
+    .desktop-orders-table-wrapper {
+      display: block;
+      overflow-x: auto;
+    }
+
+    /* Media Queries for Mobile Responsive */
+    @media (max-width: 900px) {
+      body {
+        flex-direction: column;
+        padding-bottom: 95px !important;
+      }
+      .mobile-topbar {
+        display: flex;
+      }
+      .mobile-floating-dock {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: fixed;
+        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100% - 24px);
+        max-width: 440px;
+        background: rgba(24, 21, 20, 0.94);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(196, 155, 102, 0.25);
+        border-radius: 36px;
+        padding: 8px 12px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 20px rgba(196, 155, 102, 0.12);
+        z-index: 999;
+      }
+      .dock-item {
+        background: none;
+        border: none;
+        color: #9CA3AF;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        padding: 4px 10px;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        border-radius: 16px;
+        font-family: inherit;
+        flex: 1;
+      }
+      .dock-item:active {
+        transform: scale(0.92);
+      }
+      .dock-icon-box {
+        position: relative;
+        font-size: 19px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .dock-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+      }
+      .dock-active-dot {
+        display: none;
+        width: 4px;
+        height: 4px;
+        background: var(--gold);
+        border-radius: 50%;
+        position: absolute;
+        bottom: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+        box-shadow: 0 0 8px var(--gold);
+      }
+      .dock-item.active {
+        color: var(--gold-light);
+      }
+      .dock-item.active .dock-active-dot {
+        display: block;
+      }
+      .dock-badge {
+        position: absolute;
+        top: -5px;
+        right: -8px;
+        background: var(--gold);
+        color: #191716;
+        font-size: 10px;
+        font-weight: 900;
+        padding: 1px 5px;
+        border-radius: 10px;
+        min-width: 16px;
+        text-align: center;
+        line-height: 14px;
+      }
+      .dock-badge.alert {
+        background: #3B82F6;
+        color: #FFF;
+      }
+      .dock-fab-container {
+        position: relative;
+        width: 52px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .dock-fab {
+        position: absolute;
+        top: -24px;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #A855F7 100%);
+        border: 3px solid #181514;
+        color: #FFFFFF;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 10px 25px rgba(99, 102, 241, 0.55), 0 0 16px rgba(139, 92, 246, 0.35);
+        transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      .dock-fab:active {
+        transform: scale(0.9);
+      }
+
+      .main-wrapper {
+        margin-right: 0 !important;
+        padding: 12px !important;
+        width: 100% !important;
+      }
+      .topbar {
+        display: none !important;
+      }
+      .products-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+      }
+      .product-img-wrapper {
+        height: 140px !important;
+      }
+      .product-details {
+        padding: 10px !important;
+      }
+      .product-name {
+        font-size: 13px !important;
+      }
+      .product-price {
+        font-size: 13px !important;
+      }
+      .stock-btn {
+        width: 26px !important;
+        height: 26px !important;
+      }
+      .btn-action {
+        padding: 6px 10px !important;
+        font-size: 11px !important;
+      }
+
+      /* Mobile Orders Card Styles */
+      .desktop-orders-table-wrapper {
+        display: none !important;
+      }
+      .mobile-orders-container {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 4px 0 20px 0;
+      }
+      .mob-order-card {
+        background: #1C1917;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 16px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+        transition: all 0.2s ease;
+      }
+      .mob-order-card.pending {
+        border-color: rgba(234, 179, 8, 0.3);
+      }
+      .mob-order-card.accepted {
+        border-color: rgba(34, 197, 94, 0.3);
+      }
+      .mob-order-card.rejected {
+        border-color: rgba(239, 68, 68, 0.3);
+      }
+      .mob-order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        margin-bottom: 12px;
+      }
+      .mob-order-id {
+        font-weight: 800;
+        color: var(--gold);
+        font-size: 13px;
+        background: rgba(196, 155, 102, 0.12);
+        padding: 3px 10px;
+        border-radius: 12px;
+      }
+      .mob-status-pill {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .mob-status-pill.yellow {
+        background: rgba(234, 179, 8, 0.15);
+        color: #FCD34D;
+        border: 1px solid rgba(234, 179, 8, 0.35);
+      }
+      .mob-status-pill.green {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ADE80;
+        border: 1px solid rgba(34, 197, 94, 0.35);
+      }
+      .mob-status-pill.red {
+        background: rgba(239, 68, 68, 0.15);
+        color: #F87171;
+        border: 1px solid rgba(239, 68, 68, 0.35);
+      }
+      .mob-customer-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      .mob-customer-name {
+        font-weight: 800;
+        font-size: 14px;
+        color: #FFF;
+        display: block;
+      }
+      .mob-customer-city {
+        font-size: 12px;
+        color: var(--text-muted);
+        display: block;
+        margin-top: 2px;
+      }
+      .mob-call-btn {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34D399;
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+      }
+      .mob-items-box {
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: 14px;
+        padding: 10px;
+        margin-bottom: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .mob-order-item-chip {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        font-size: 12px;
+      }
+      .mob-item-name {
+        font-weight: 700;
+        color: #FFF;
+      }
+      .mob-item-qty {
+        background: rgba(196, 155, 102, 0.2);
+        color: var(--gold-light);
+        font-weight: 800;
+        padding: 1px 6px;
+        border-radius: 6px;
+        font-size: 11px;
+      }
+      .mob-sub-chip {
+        background: rgba(255, 255, 255, 0.08);
+        color: #D1D5DB;
+        padding: 1px 6px;
+        border-radius: 6px;
+        font-size: 10.5px;
+      }
+      .mob-order-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .mob-total-val {
+        font-size: 16px;
+        font-weight: 900;
+        color: var(--gold-light);
+      }
+      .mob-total-label {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-left: 4px;
+      }
+      .mob-order-actions {
+        display: flex;
+        gap: 6px;
+      }
+      .mob-action-btn {
+        border: none;
+        padding: 7px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: transform 0.15s;
+        font-family: inherit;
+      }
+      .mob-action-btn:active {
+        transform: scale(0.94);
+      }
+      .mob-action-btn.accept {
+        background: #10B981;
+        color: #FFF;
+      }
+      .mob-action-btn.reject {
+        background: rgba(239, 68, 68, 0.2);
+        color: #F87171;
+        border: 1px solid rgba(239, 68, 68, 0.4);
+      }
+      .mob-action-btn.delete {
+        background: rgba(255, 255, 255, 0.08);
+        color: #9CA3AF;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .products-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 10px !important;
+      }
+    }
+
   </style>
 
 </head>
@@ -1807,16 +2502,28 @@
 <body>
   <!-- Mobile Responsive Top Header -->
   <div class="mobile-topbar" id="mobileTopbar">
-    <button class="mobile-menu-btn" onclick="toggleMobileSidebar()" aria-label="کردنەوەی مێنیو">
-      <i class="fa-solid fa-bars"></i>
-    </button>
-    <div class="mobile-brand">
-      <i class="fa-solid fa-crown" style="color:var(--gold);"></i>
-      <span>COMANDO Admin</span>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <button class="mobile-menu-btn" onclick="openMobileMenuSheet()" aria-label="کردنەوەی مێنیو">
+        <i class="fa-solid fa-bars-staggered"></i>
+      </button>
+      <div class="mobile-brand">
+        <div class="mobile-brand-icon">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div style="display:flex; flex-direction:column; line-height:1.2;">
+          <span style="font-size:15px; font-weight:900; letter-spacing:0.8px; color:#FFF; font-family:'Plus Jakarta Sans', sans-serif;">COMANDO</span>
+          <span style="font-size:9.5px; color:var(--gold); font-weight:700;">STORE ADMIN</span>
+        </div>
+      </div>
     </div>
-    <button class="mobile-refresh-btn" onclick="loadAllFromSupabase()" title="نوێکردنەوەی داتا">
-      <i class="fa-solid fa-rotate"></i>
-    </button>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div id="mobileSyncStatus" class="mob-sync-live" onclick="loadAllFromSupabase()" title="دۆخی هاوکاتبوون">
+        <span class="mob-dot"></span> هاوکاتە (Live)
+      </div>
+      <button class="mobile-refresh-btn" onclick="loadAllFromSupabase()" title="نوێکردنەوەی داتا">
+        <i class="fa-solid fa-rotate" id="mobileRefreshIcon"></i>
+      </button>
+    </div>
   </div>
   <div id="sidebarBackdrop" onclick="closeMobileSidebar()"></div>
 
@@ -1853,11 +2560,11 @@
       <form id="adminLoginForm" action="javascript:void(0);" onsubmit="event.preventDefault(); handleSecureLogin(event); return false;" style="display:flex; flex-direction:column; gap:14px; text-align:right;">
         <div class="form-group">
           <label class="form-label">ناوی بەکارهێنەر (Username)</label>
-          <input type="text" id="loginUsername" class="form-input" placeholder="barzaniebo" autocomplete="username" required autofocus>
+          <input type="text" id="loginUsername" class="form-input" placeholder="Enter username" autocomplete="username" required autofocus value="">
         </div>
         <div class="form-group">
           <label class="form-label">تێپەڕەوشەی نهێنی (Password)</label>
-          <input type="password" id="loginPassword" class="form-input" placeholder="••••••••••••" autocomplete="current-password" required>
+          <input type="password" id="loginPassword" class="form-input" placeholder="Enter password" autocomplete="current-password" required value="">
         </div>
         <div id="loginError" style="display:none; color:var(--danger); font-size:12px; font-weight:700; text-align:center; background:rgba(239,68,68,0.1); padding:8px; border-radius:8px;">
           ناوی بەکارهێنەر یان تێپەڕەوشە هەڵەیە!
@@ -2550,8 +3257,7 @@
 
           </div>
 
-          <div style="overflow-x:auto;">
-
+          <div style="overflow-x:auto;" class="desktop-orders-table-wrapper">
             <table class="data-table">
 
               <thead>
@@ -2579,11 +3285,9 @@
               </tbody>
 
             </table>
-
           </div>
-
+          <div id="mobileOrdersContainer" class="mobile-orders-container"></div>
         </div>
-
       </section>
 
       <!-- ============================================================ -->
@@ -4197,403 +4901,305 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
 
     // ---------------------------------------------------------------
 
-    async function loadAllFromSupabase() {
+    
+    let realtimeSyncChannel = null;
 
-      const icon = document.getElementById('refreshIcon');
+    function playNotificationChime() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.45);
+      } catch(_) {}
+    }
 
-      if (icon) icon.classList.add('fa-spin');
-
-      let hasTableError = false;
-
-      if (!supabaseClient) {
-
-        if (icon) icon.classList.remove('fa-spin');
-
-        return;
-
+    function setupRealtimeMultiOwnerSync() {
+      if (!supabaseClient) return;
+      if (realtimeSyncChannel) {
+        try { supabaseClient.removeChannel(realtimeSyncChannel); } catch (_) {}
       }
 
       try {
+        realtimeSyncChannel = supabaseClient.channel('commando_multiowner_realtime')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
+            console.log('⚡ Realtime [products]:', payload.eventType, payload);
+            if (payload.eventType === 'DELETE') {
+              const delId = payload.old?.id;
+              if (delId) {
+                products = products.filter(p => p.id !== delId);
+                saveState();
+                renderProducts();
+                updateOverview();
+                updateDockBadges();
+                showToast('🗑️ کاڵایەک لەلایەن بەڕێوەبەرێکی ترەوە سڕایەوە', 'info');
+              } else {
+                loadAllFromSupabase(true);
+              }
+            } else if (payload.eventType === 'INSERT') {
+              loadAllFromSupabase(true);
+              showToast('✨ کاڵایەکی نوێ لەلایەن بەڕێوەبەرێکی ترەوە زیادکرا', 'success');
+            } else if (payload.eventType === 'UPDATE') {
+              loadAllFromSupabase(true);
+            }
+          })
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
+            console.log('⚡ Realtime [orders]:', payload.eventType);
+            loadAllFromSupabase(true);
+            if (payload.eventType === 'INSERT') {
+              playNotificationChime();
+              showToast('📦 داواکارییەکی نوێ لە ئەپەوە گەیشت!', 'info');
+            }
+          })
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'offers' }, () => {
+            loadAllFromSupabase(true);
+          })
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'banners' }, () => {
+            loadAllFromSupabase(true);
+          })
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
+            loadAllFromSupabase(true);
+          })
+          .subscribe((status) => {
+            console.log('⚡ Realtime status:', status);
+            const badge = document.getElementById('supabaseStatusBadge');
+            const mobBadge = document.getElementById('mobileSyncStatus');
+            if (status === 'SUBSCRIBED') {
+              if (badge) {
+                badge.innerHTML = '<div class="sync-pulse" style="background:#10B981;"></div><span>🟢 هاوکاتی ڕاستەوخۆ (Live Sync)</span>';
+                badge.style.borderColor = 'rgba(16,185,129,0.5)';
+                badge.style.color = '#10B981';
+              }
+              if (mobBadge) {
+                mobBadge.innerHTML = '<span class="mob-dot"></span> هاوکاتە (Live)';
+                mobBadge.className = 'mob-sync-live';
+              }
+            } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+              if (badge) {
+                badge.innerHTML = '<div class="sync-pulse" style="background:#F59E0B;"></div><span>🟡 پەیوەستە بە Supabase</span>';
+                badge.style.borderColor = 'rgba(245,158,11,0.5)';
+                badge.style.color = '#F59E0B';
+              }
+              if (mobBadge) {
+                mobBadge.innerHTML = '🟡 Supabase';
+                mobBadge.className = 'mob-sync-polling';
+              }
+            }
+          });
+      } catch (e) {
+        console.warn('Realtime subscription error:', e);
+      }
+    }
 
-        // Products
+    function updateDockBadges() {
+      const pBadge = document.getElementById('dockProductBadge');
+      if (pBadge) pBadge.textContent = products.length;
 
-        const { data: pData, error: pErr } = await supabaseClient.from('products').select('*').order('created_at', { ascending: false });
+      const oBadge = document.getElementById('dockOrderBadge');
+      if (oBadge) {
+        const pendingCount = orders.filter(o => o.status === 'pending' || !o.status).length;
+        oBadge.textContent = pendingCount || orders.length;
+        if (pendingCount > 0) {
+          oBadge.classList.add('alert');
+          oBadge.style.display = 'block';
+        } else {
+          oBadge.classList.remove('alert');
+          oBadge.style.display = orders.length === 0 ? 'none' : 'block';
+        }
+      }
+
+      const mOffer = document.getElementById('mobOfferBadge');
+      if (mOffer) mOffer.textContent = offers.length;
+
+      const mBanner = document.getElementById('mobBannerBadge');
+      if (mBanner) mBanner.textContent = banners.length;
+
+      const mNotif = document.getElementById('mobNotifBadge');
+      if (mNotif) mNotif.textContent = notifications.length;
+    }
+
+    async function loadAllFromSupabase(silent = false) {
+      const icon = document.getElementById('refreshIcon');
+      const mobIcon = document.getElementById('mobileRefreshIcon');
+      if (!silent) {
+        if (icon) icon.classList.add('fa-spin');
+        if (mobIcon) mobIcon.classList.add('fa-spin');
+      }
+      let hasTableError = false;
+
+      if (!supabaseClient) {
+        if (icon) icon.classList.remove('fa-spin');
+        if (mobIcon) mobIcon.classList.remove('fa-spin');
+        return;
+      }
+
+      try {
+        // 1. PRODUCTS (Single source of truth)
+        const { data: pData, error: pErr } = await supabaseClient
+          .from('products')
+          .select('*')
+          .order('created_at', { ascending: false });
 
         if (!pErr && pData) {
-
           const metaRegex = /<!--COMANDO_META:(\{.*?\})-->/;
-
-          const remoteProducts = pData
-
-            .filter(p => !deletedProductIds.includes(p.id) && !LEGACY_MOCK_IDS.includes(p.id) && !SAMPLE_MOCK_NAMES.includes(p.name))
-
+          products = pData
+            .filter(p => !LEGACY_MOCK_IDS.includes(p.id) && !SAMPLE_MOCK_NAMES.includes(p.name))
             .map(p => {
-
               let pColors = [];
-
               let pSizes = [];
-
               let cleanDesc = p.description || '';
-
               const match = cleanDesc.match(metaRegex);
-
               if (match) {
-
                 try {
-
                   const meta = JSON.parse(match[1]);
-
                   pColors = meta.colors || [];
-
                   pSizes = meta.sizes || [];
-
                   cleanDesc = cleanDesc.replace(metaRegex, '').trim();
-
                 } catch (_) {}
-
               }
-
               return {
-
                 id: p.id,
-
                 name: p.name,
-
                 category: p.category || 'COMMANDO Shirts',
-
                 price: Number(p.price) || 0,
-
                 stock: p.stock ?? (p.in_stock ? 10 : 0),
-
                 imageUrl: p.image_url || '',
-
                 description: cleanDesc,
-
                 rawDescription: p.description || '',
-
                 colors: pColors,
-
                 sizes: pSizes,
-
                 badge: p.badge || ''
-
               };
-
             });
-
-          if (remoteProducts.length > 0) {
-
-            const merged = [...remoteProducts];
-
-            products.forEach(lp => {
-
-              if (!deletedProductIds.includes(lp.id) && !merged.some(rp => rp.id === lp.id)) {
-
-                merged.push(lp);
-
-                syncProductToSupabase(lp);
-
-              }
-
-            });
-
-            products = merged;
-
-          } else if (products.length > 0) {
-
-            products.forEach(lp => {
-
-              if (!deletedProductIds.includes(lp.id)) {
-
-                syncProductToSupabase(lp);
-
-              }
-
-            });
-
-          }
-
+          try { localStorage.setItem('comando_products', JSON.stringify(products)); } catch (_) {}
         } else if (pErr) {
-
           console.warn('Products load error:', pErr);
-
         }
 
-        // Offers
-
-        const { data: oData, error: oErr } = await supabaseClient.from('offers').select('*').order('created_at', { ascending: false });
+        // 2. OFFERS
+        const { data: oData, error: oErr } = await supabaseClient
+          .from('offers')
+          .select('*')
+          .order('created_at', { ascending: false });
 
         if (!oErr && oData) {
-
-          const remoteOffers = oData
-
-            .filter(o => !deletedOfferIds.includes(o.id) && !LEGACY_MOCK_IDS.includes(o.id) && !SAMPLE_OFFER_TITLES.includes(o.title))
-
+          offers = oData
+            .filter(o => !LEGACY_MOCK_IDS.includes(o.id) && !SAMPLE_OFFER_TITLES.includes(o.title))
             .map(o => ({
-
               id: o.id,
-
               title: o.title,
-
               oldPrice: Number(o.old_price) || 0,
-
               newPrice: Number(o.new_price) || 0,
-
               discountPercent: o.discount_percent || 0,
-
               expiresAt: o.expires_at || new Date(Date.now() + 86400000).toISOString(),
-
               imageUrl: o.image_url || ''
-
             }));
-
-          if (remoteOffers.length > 0) {
-
-            const merged = [...remoteOffers];
-
-            offers.forEach(lo => {
-
-              if (!deletedOfferIds.includes(lo.id) && !merged.some(ro => ro.id === lo.id)) {
-
-                merged.push(lo);
-
-                syncOfferToSupabase(lo);
-
-              }
-
-            });
-
-            offers = merged;
-
-          } else if (offers.length > 0) {
-
-            offers.forEach(lo => {
-
-              if (!deletedOfferIds.includes(lo.id)) {
-
-                syncOfferToSupabase(lo);
-
-              }
-
-            });
-
-          }
-
+          try { localStorage.setItem('comando_offers', JSON.stringify(offers)); } catch (_) {}
         } else if (oErr) {
-
           console.warn('Offers load error:', oErr);
-
         }
 
-        // Banners
-
-        const { data: bData, error: bErr } = await supabaseClient.from('banners').select('*').order('created_at', { ascending: false });
+        // 3. BANNERS
+        const { data: bData, error: bErr } = await supabaseClient
+          .from('banners')
+          .select('*')
+          .order('created_at', { ascending: false });
 
         if (!bErr && bData) {
-
-          const remoteBanners = bData
-
-            .filter(b => !deletedBannerIds.includes(b.id))
-
-            .map(b => ({
-
-              id: b.id,
-
-              title: b.title || '',
-
-              imageUrl: b.image_url || '',
-
-              linkUrl: b.link_url || ''
-
-            }));
-
-          if (remoteBanners.length > 0) {
-
-            const merged = [...remoteBanners];
-
-            banners.forEach(lb => {
-
-              if (!deletedBannerIds.includes(lb.id) && !merged.some(rb => rb.id === lb.id)) {
-
-                merged.push(lb);
-
-                syncBannerToSupabase(lb);
-
-              }
-
-            });
-
-            banners = merged;
-
-          } else if (banners.length > 0) {
-
-            banners.forEach(lb => {
-
-              if (!deletedBannerIds.includes(lb.id)) {
-
-                syncBannerToSupabase(lb);
-
-              }
-
-            });
-
-          }
-
+          banners = bData.map(b => ({
+            id: b.id,
+            title: b.title || '',
+            imageUrl: b.image_url || '',
+            linkUrl: b.link_url || ''
+          }));
+          try { localStorage.setItem('comando_banners', JSON.stringify(banners)); } catch (_) {}
         } else if (bErr) {
-
-          console.warn('Banners load error (Table may not exist):', bErr);
-
+          console.warn('Banners load error:', bErr);
           hasTableError = true;
-
         }
 
-        // Notifications
-
-        const { data: nData, error: nErr } = await supabaseClient.from('notifications').select('*').order('created_at', { ascending: false });
+        // 4. NOTIFICATIONS
+        const { data: nData, error: nErr } = await supabaseClient
+          .from('notifications')
+          .select('*')
+          .order('created_at', { ascending: false });
 
         if (!nErr && nData) {
-
-          const remoteNotifs = nData
-
-            .filter(n => !deletedNotifIds.includes(n.id))
-
-            .map(n => ({
-
-              id: n.id,
-
-              title: n.title,
-
-              body: n.body,
-
-              category: n.category || 'ئاگاداری',
-
-              time: n.time || (n.created_at ? n.created_at.split('T')[0] : 'نوێ')
-
-            }));
-
-          if (remoteNotifs.length > 0) {
-
-            const merged = [...remoteNotifs];
-
-            notifications.forEach(ln => {
-
-              if (!deletedNotifIds.includes(ln.id) && !merged.some(rn => rn.id === ln.id)) {
-
-                merged.push(ln);
-
-                syncNotificationToSupabase(ln);
-
-              }
-
-            });
-
-            notifications = merged;
-
-          } else if (notifications.length > 0) {
-
-            notifications.forEach(ln => {
-
-              if (!deletedNotifIds.includes(ln.id)) {
-
-                syncNotificationToSupabase(ln);
-
-              }
-
-            });
-
-          }
-
+          notifications = nData.map(n => ({
+            id: n.id,
+            title: n.title,
+            body: n.body,
+            category: n.category || 'ئاگاداری',
+            time: n.time || (n.created_at ? n.created_at.split('T')[0] : 'نوێ')
+          }));
+          try { localStorage.setItem('comando_notifications', JSON.stringify(notifications)); } catch (_) {}
         } else if (nErr) {
-
-          console.warn('Notifications load error (Table may not exist):', nErr);
-
+          console.warn('Notifications load error:', nErr);
           hasTableError = true;
-
         }
 
-        // Orders
-
-        const { data: ordData, error: ordErr } = await supabaseClient.from('orders').select('*').order('created_at', { ascending: false });
+        // 5. ORDERS
+        const { data: ordData, error: ordErr } = await supabaseClient
+          .from('orders')
+          .select('*')
+          .order('created_at', { ascending: false });
 
         if (!ordErr && ordData) {
-
-          orders = ordData
-
-            .filter(o => !deletedOrderIds.includes(o.id))
-
-            .map(sanitizeOrder)
-
-            .filter(Boolean);
-
-          saveState();
-
+          orders = ordData.map(sanitizeOrder).filter(Boolean);
+          try { localStorage.setItem('comando_orders', JSON.stringify(orders)); } catch (_) {}
         }
 
-        // Profiles (Users)
-
+        // 6. PROFILES (USERS)
         try {
-
           const { data: uData, count: uCount, error: uErr } = await supabaseClient
-
             .from('profiles')
-
             .select('*', { count: 'exact' })
-
             .order('updated_at', { ascending: false });
 
           if (!uErr && uData) {
-
             appUsers = uData;
-
             const userCount = (uCount !== null && uCount !== undefined) ? uCount : uData.length;
-
             const elStat = document.getElementById('statTotalUsers');
-
             const elBadge = document.getElementById('userCountBadge');
-
             if (elStat) elStat.textContent = userCount;
-
             if (elBadge) elBadge.textContent = userCount;
-
           }
-
         } catch (_) {}
 
         const bannerElem = document.getElementById('setupAlertBanner');
-
         if (bannerElem) {
-
           bannerElem.style.display = hasTableError ? 'flex' : 'none';
-
         }
 
         saveState();
-
         renderProducts();
-
         renderOffers();
-
         renderBanners();
-
         renderNotifications();
-
         renderOrders();
-
         renderShops();
-
         updateOverview();
+        updateDockBadges();
+
+        if (!realtimeSyncChannel && supabaseClient) {
+          setupRealtimeMultiOwnerSync();
+        }
 
       } catch (err) {
-
         console.warn('Error loading from Supabase:', err);
-
       } finally {
-
-        if (icon) setTimeout(() => icon.classList.remove('fa-spin'), 400);
-
+        if (icon) setTimeout(() => icon.classList.remove('fa-spin'), 350);
+        if (mobIcon) setTimeout(() => mobIcon.classList.remove('fa-spin'), 350);
       }
-
     }
+
 
     async function syncProductToSupabase(p) {
 
@@ -5119,46 +5725,66 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
 
     };
 
-    function switchTab(tabId) {
-      closeMobileSidebar();
-
-      document.querySelectorAll('.tab-section').forEach(el => el.style.display = 'none');
-
-      const target = document.getElementById('tab-' + tabId);
-
-      if (target) target.style.display = 'block';
-
-      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-
-      const activeBtn = Array.from(document.querySelectorAll('.nav-item')).find(el => el.getAttribute('onclick')?.includes(tabId));
-
-      if (activeBtn) activeBtn.classList.add('active');
-
-      document.getElementById('topbarTitle').textContent = tabTitles[tabId] || 'دەشبۆرد';
-
-      if (tabId === 'overview') updateOverview();
-
-      if (tabId === 'products') renderProducts();
-
-      if (tabId === 'offers') renderOffers();
-
-      if (tabId === 'banners') renderBanners();
-
-      if (tabId === 'notifications') renderNotifications();
-
-      if (tabId === 'orders') renderOrders();
-
-      if (tabId === 'shops') renderShops();
-
-      if (tabId === 'users') renderUsers();
-
+    
+    function openQuickActionSheet() {
+      const sheet = document.getElementById('quickActionSheet');
+      const backdrop = document.getElementById('quickActionSheetBackdrop');
+      if (sheet) sheet.classList.add('show');
+      if (backdrop) backdrop.classList.add('show');
+    }
+    function closeQuickActionSheet() {
+      const sheet = document.getElementById('quickActionSheet');
+      const backdrop = document.getElementById('quickActionSheetBackdrop');
+      if (sheet) sheet.classList.remove('show');
+      if (backdrop) backdrop.classList.remove('show');
+    }
+    function openMobileMenuSheet() {
+      const sheet = document.getElementById('mobileMenuSheet');
+      const backdrop = document.getElementById('mobileMenuSheetBackdrop');
+      if (sheet) sheet.classList.add('show');
+      if (backdrop) backdrop.classList.add('show');
+    }
+    function closeMobileMenuSheet() {
+      const sheet = document.getElementById('mobileMenuSheet');
+      const backdrop = document.getElementById('mobileMenuSheetBackdrop');
+      if (sheet) sheet.classList.remove('show');
+      if (backdrop) backdrop.classList.remove('show');
     }
 
-    // ---------------------------------------------------------------
+    function switchTab(tabId) {
+      closeMobileSidebar();
+      closeMobileMenuSheet();
+      closeQuickActionSheet();
 
-    // 7. PRODUCTS RENDERING & ACTIONS
+      document.querySelectorAll('.tab-section').forEach(el => el.style.display = 'none');
+      const target = document.getElementById('tab-' + tabId);
+      if (target) target.style.display = 'block';
 
-    // ---------------------------------------------------------------
+      // Desktop nav active state
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      const activeBtn = Array.from(document.querySelectorAll('.nav-item')).find(el => el.getAttribute('onclick')?.includes(tabId));
+      if (activeBtn) activeBtn.classList.add('active');
+
+      // Mobile dock active state
+      document.querySelectorAll('.dock-item').forEach(el => el.classList.remove('active'));
+      const dockItem = document.querySelector(`.dock-item[data-tab="${tabId}"]`);
+      if (dockItem) dockItem.classList.add('active');
+
+      const titleEl = document.getElementById('topbarTitle');
+      if (titleEl) titleEl.textContent = tabTitles[tabId] || 'دەشبۆرد';
+
+      if (tabId === 'overview') updateOverview();
+      if (tabId === 'products') renderProducts();
+      if (tabId === 'offers') renderOffers();
+      if (tabId === 'banners') renderBanners();
+      if (tabId === 'notifications') renderNotifications();
+      if (tabId === 'orders') renderOrders();
+      if (tabId === 'shops') renderShops();
+      if (tabId === 'users') renderUsers();
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
 
     function renderProducts() {
 
@@ -5312,43 +5938,27 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
 
     }
 
+    
     async function deleteProduct(productId) {
-
       if (!confirm('دڵنیایت لە سڕینەوەی ئەم کاڵایە لە کۆگا و ئەپ؟')) return;
 
-      // 1. Permanently record deletion locally so it NEVER resurfaces
-
-      if (!deletedProductIds.includes(productId)) {
-
-        deletedProductIds.push(productId);
-
-      }
-
+      // 1. Immediately remove from local list for snappy UI
       products = products.filter(x => x.id !== productId);
-
       saveState();
-
       renderProducts();
-
       updateOverview();
+      updateDockBadges();
 
-      // 2. Attempt delete from Supabase
-
+      // 2. Permanently delete from Supabase central database
       const res = await deleteProductFromSupabase(productId);
-
       if (res.success) {
-
-        showToast('کاڵاکە بە سەرکەوتوویی لە کۆگا و Supabase سڕایەوە ✓', 'success');
-
+        showToast('کاڵاکە بە سەرکەوتوویی لە هەموو دەشبۆردەکان و ئەپ سڕایەوە ✓', 'success');
       } else {
-
         console.warn('Delete from Supabase:', res.error);
-
         showToast('کاڵاکە سڕایەوە ✓', 'success');
-
       }
-
     }
+
 
     function appendColor(name) {
 
@@ -6249,192 +6859,192 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
 
     // ---------------------------------------------------------------
 
+    
     function renderOrders() {
       const tbody = document.getElementById('ordersTableBody');
-      if (!tbody) return;
-      tbody.innerHTML = '';
+      const mobileContainer = document.getElementById('mobileOrdersContainer');
       orders = orders.map(sanitizeOrder).filter(Boolean);
 
-      if (orders.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="8" style="text-align:center; padding:36px; color:var(--text-muted);">
-              <i class="fa-solid fa-cart-arrow-down" style="font-size:32px; margin-bottom:8px; display:block;"></i>
-              هیچ داواکارییەک لە ئێستادا نییە. هەر داواکارییەک لە ئەپەوە بنێردرێت لێرە دەردەکەوێت.
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      orders.forEach(ord => {
-        const tr = document.createElement('tr');
-        const cleanPhone = (ord.phone || '').replace(/[^0-9]/g, '');
-        let itemsHtml = '';
-        if (Array.isArray(ord.detailed_items) && ord.detailed_items.length > 0) {
-          itemsHtml = ord.detailed_items.map(it => `
-            <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(212,175,55,0.3); border-radius:8px; padding:7px 10px; margin-bottom:6px; box-shadow:0 2px 6px rgba(0,0,0,0.25);">
-              <div style="font-weight:700; color:#fff; font-size:13px; display:flex; align-items:center; justify-content:space-between; gap:6px;">
-                <span><i class="fa-solid fa-shirt" style="color:var(--gold); margin-left:5px;"></i>${it.name}</span>
-                <span style="font-size:11px; color:#fbbf24; font-weight:800; background:rgba(212,175,55,0.15); padding:2px 7px; border-radius:5px;">×${it.quantity} دانە</span>
-              </div>
-              <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; font-size:11px;">
-                ${it.size ? `<span style="background:rgba(234,179,8,0.18); color:#fef08a; padding:2px 8px; border-radius:5px; font-weight:700; border:1px solid rgba(234,179,8,0.4); display:inline-flex; align-items:center;"><i class="fa-solid fa-ruler-combined" style="margin-left:4px; color:#eab308;"></i>قیاس: ${it.size}</span>` : ''}
-                ${it.color ? `<span style="background:rgba(59,130,246,0.18); color:#93c5fd; padding:2px 8px; border-radius:5px; font-weight:700; border:1px solid rgba(59,130,246,0.4); display:inline-flex; align-items:center;"><i class="fa-solid fa-palette" style="margin-left:4px; color:#60a5fa;"></i>ڕەنگ: ${it.color}</span>` : ''}
-              </div>
-            </div>
-          `).join('');
-        } else {
-          itemsHtml = `<div style="color:#cbd5e1; font-size:12px; font-weight:600;">${ord.items || '-'}</div>`;
-        }
-
-        let statusBadge = '';
-        if (ord.status === 'accepted') {
-          statusBadge = `
-            <div style="display:flex; flex-direction:column; gap:4px;">
-              <span class="badge" style="background:rgba(34,197,94,0.18); color:#22c55e; border:1px solid rgba(34,197,94,0.4); padding:5px 10px; border-radius:8px; font-weight:700; font-size:11.5px; display:inline-flex; align-items:center; gap:6px;">
-                <i class="fa-solid fa-truck-fast"></i> قبووڵکراوە
-              </span>
-              <span style="font-size:10.5px; color:#4ade80;">دەگاتە دەستت لەم چەند ڕۆژە 🚚</span>
-            </div>
-          `;
-        } else if (ord.status === 'rejected') {
-          statusBadge = `
-            <div style="display:flex; flex-direction:column; gap:4px;">
-              <span class="badge" style="background:rgba(239,68,68,0.18); color:#ef4444; border:1px solid rgba(239,68,68,0.4); padding:5px 10px; border-radius:8px; font-weight:700; font-size:11.5px; display:inline-flex; align-items:center; gap:6px;">
-                <i class="fa-solid fa-circle-xmark"></i> ڕەتکراوەتەوە
-              </span>
-              ${ord.rejection_reason ? `<span style="font-size:10.5px; color:#f87171; max-width:180px; word-break:break-word;">هۆکار: ${ord.rejection_reason}</span>` : ''}
-            </div>
-          `;
-        } else if (ord.status === 'shipping') {
-          statusBadge = `
-            <span class="badge" style="background:rgba(59,130,246,0.18); color:#3b82f6; border:1px solid rgba(59,130,246,0.4); padding:5px 10px; border-radius:8px; font-weight:700; font-size:11.5px; display:inline-flex; align-items:center; gap:6px;">
-              <i class="fa-solid fa-box"></i> لە ڕێگایە (Shipping)
-            </span>
-          `;
-        } else if (ord.status === 'completed') {
-          statusBadge = `
-            <span class="badge" style="background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.4); padding:5px 10px; border-radius:8px; font-weight:700; font-size:11.5px; display:inline-flex; align-items:center; gap:6px;">
-              <i class="fa-solid fa-circle-check"></i> گەیەندراوە (Delivered)
-            </span>
+      // Desktop Table
+      if (tbody) {
+        tbody.innerHTML = '';
+        if (orders.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="8" style="text-align:center; padding:36px; color:var(--text-muted);">
+                <i class="fa-solid fa-cart-arrow-down" style="font-size:32px; margin-bottom:8px; display:block;"></i>
+                هیچ داواکارییەک لە ئێستادا نییە. هەر داواکارییەک لە ئەپەوە بنێردرێت لێرە دەردەکەوێت.
+              </td>
+            </tr>
           `;
         } else {
-          statusBadge = `
-            <span class="badge" style="background:rgba(234,179,8,0.18); color:#eab308; border:1px solid rgba(234,179,8,0.4); padding:5px 10px; border-radius:8px; font-weight:700; font-size:11.5px; display:inline-flex; align-items:center; gap:6px;">
-              <i class="fa-solid fa-clock"></i> لە چاوەڕوانیدا (Pending)
-            </span>
-          `;
-        }
+          orders.forEach(ord => {
+            const tr = document.createElement('tr');
+            const cleanPhone = (ord.phone || '').replace(/[^0-9]/g, '');
+            let itemsHtml = '';
+            if (Array.isArray(ord.detailed_items) && ord.detailed_items.length > 0) {
+              itemsHtml = ord.detailed_items.map(it => `
+                <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(212,175,55,0.3); border-radius:8px; padding:7px 10px; margin-bottom:6px; box-shadow:0 2px 6px rgba(0,0,0,0.25);">
+                  <div style="font-weight:700; color:#fff; font-size:13px; display:flex; align-items:center; justify-content:space-between; gap:6px;">
+                    <span><i class="fa-solid fa-shirt" style="color:var(--gold); margin-left:5px;"></i>${it.name}</span>
+                    <span style="font-size:11px; color:#fbbf24; font-weight:800; background:rgba(212,175,55,0.15); padding:2px 7px; border-radius:5px;">×${it.quantity} دانە</span>
+                  </div>
+                  <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; font-size:11px;">
+                    ${it.size ? `<span style="background:rgba(234,179,8,0.18); color:#fef08a; padding:2px 8px; border-radius:5px; font-weight:700; border:1px solid rgba(234,179,8,0.4); display:inline-flex; align-items:center;"><i class="fa-solid fa-ruler-combined" style="margin-left:4px; color:#eab308;"></i>قیاس: ${it.size}</span>` : ''}
+                    ${it.color ? `<span style="background:rgba(59,130,246,0.18); color:#93c5fd; padding:2px 8px; border-radius:5px; font-weight:700; border:1px solid rgba(59,130,246,0.4); display:inline-flex; align-items:center;"><i class="fa-solid fa-palette" style="margin-left:4px; color:#60a5fa;"></i>ڕەنگ: ${it.color}</span>` : ''}
+                  </div>
+                </div>
+              `).join('');
+            } else {
+              itemsHtml = `<div style="color:#cbd5e1; font-size:12px; font-weight:600;">${ord.items || '-'}</div>`;
+            }
 
-        tr.innerHTML = `
-          <td style="font-weight:800; color:var(--gold); font-size:12px;">${ord.id}</td>
-          <td style="font-weight:700; color:#fff;">
-            <div>${ord.customer}</div>
-            ${ord.email ? `<div style="font-size:11px; color:var(--text-muted); font-weight:normal;">${ord.email}</div>` : ''}
-          </td>
-          <td>
-            <a href="tel:${cleanPhone}" style="color:var(--text-muted); text-decoration:none; font-weight:600;">
-              <i class="fa-solid fa-phone" style="font-size:11px; margin-left:4px; color:var(--gold);"></i>${ord.phone || '-'}
-            </a>
-          </td>
-          <td style="font-size:12px; color:#e2e8f0; max-width:200px; line-height:1.4;">
-            <i class="fa-solid fa-location-dot" style="color:#ef4444; margin-left:4px;"></i>${ord.address || '-'}
-          </td>
-          <td style="font-size:12px; min-width:220px; max-width:320px; line-height:1.4;">${itemsHtml}</td>
-          <td style="font-weight:800; color:var(--gold); font-size:13px; white-space:nowrap;">${Number(ord.total).toLocaleString()} د.ع</td>
-          <td style="min-width:160px;">
-            ${statusBadge}
-            <div style="margin-top:6px;">
-              <select class="form-select" style="padding:3px 6px; font-size:11px;" onchange="updateOrderStatus('${ord.id}', this.value)">
-                <option value="pending" ${ord.status==='pending'?'selected':''}>لە چاوەڕوانیدا</option>
-                <option value="accepted" ${ord.status==='accepted'?'selected':''}>قبووڵکراو (دەگاتە دەستت)</option>
-                <option value="shipping" ${ord.status==='shipping'?'selected':''}>لە ڕێگایە (Shipping)</option>
-                <option value="completed" ${ord.status==='completed'?'selected':''}>گەیەندراوە (Delivered)</option>
-                <option value="rejected" ${ord.status==='rejected'?'selected':''}>ڕەتکراوەتەوە (Rejected)</option>
-                <option value="cancelled" ${ord.status==='cancelled'?'selected':''}>هەڵوەشاوەتەوە</option>
-              </select>
-            </div>
-          </td>
-          <td>
-            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-              <button class="btn-action" onclick="acceptOrder('${ord.id}')" style="background:rgba(34,197,94,0.2); color:#22c55e; border:1px solid rgba(34,197,94,0.5); padding:6px 10px; font-size:11.5px; font-weight:bold; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="قبووڵکردنی داواکاری">
-                <i class="fa-solid fa-check"></i> قبووڵکردن
-              </button>
-              <button class="btn-action" onclick="rejectOrder('${ord.id}')" style="background:rgba(239,68,68,0.2); color:#ef4444; border:1px solid rgba(239,68,68,0.5); padding:6px 10px; font-size:11.5px; font-weight:bold; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="ڕەتکردنەوە بە هۆکار">
-                <i class="fa-solid fa-xmark"></i> ڕەتکردنەوە
-              </button>
-              ${cleanPhone ? `
-                <a href="https://wa.me/${cleanPhone}?text=${encodeURIComponent('سڵاو بەڕێز ' + ord.customer + ' لە پەیوەندی داواکارییەکەت لە COMANDO: ' + ord.id)}" target="_blank" class="btn-action" style="padding:6px 8px; display:inline-flex; border-radius:8px;" title="پەیام لە WhatsApp">
-                  <i class="fa-brands fa-whatsapp" style="color:#25D366; font-size:14px;"></i>
+            let statusBadge = '';
+            if (ord.status === 'accepted') {
+              statusBadge = `
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                  <span class="badge" style="background:rgba(34,197,94,0.18); color:#22c55e; border:1px solid rgba(34,197,94,0.4); padding:5px 10px; border-radius:8px; font-weight:700; font-size:11.5px; display:inline-flex; align-items:center; gap:6px;">
+                    <i class="fa-solid fa-truck-fast"></i> قبووڵکراوە
+                  </span>
+                  <span style="font-size:10.5px; color:#4ade80;">دەگاتە دەستت لەم چەند ڕۆژە 🚚</span>
+                </div>
+              `;
+            } else if (ord.status === 'rejected') {
+              statusBadge = `
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                  <span class="badge" style="background:rgba(239,68,68,0.18); color:#ef4444; border:1px solid rgba(239,68,68,0.4); padding:5px 10px; border-radius:8px; font-weight:700; font-size:11.5px; display:inline-flex; align-items:center; gap:6px;">
+                    <i class="fa-solid fa-circle-xmark"></i> ڕەتکراوەتەوە
+                  </span>
+                  ${ord.rejection_reason ? `<span style="font-size:10.5px; color:#f87171; max-width:180px; word-break:break-word;">هۆکار: ${ord.rejection_reason}</span>` : ''}
+                </div>
+              `;
+            } else {
+              statusBadge = `
+                <span class="badge" style="background:rgba(234,179,8,0.18); color:#eab308; border:1px solid rgba(234,179,8,0.4); padding:5px 10px; border-radius:8px; font-weight:700; font-size:11.5px; display:inline-flex; align-items:center; gap:6px;">
+                  <i class="fa-solid fa-clock"></i> لە چاوەڕوانیدا (Pending)
+                </span>
+              `;
+            }
+
+            tr.innerHTML = `
+              <td style="font-weight:800; color:var(--gold); font-size:12px;">${ord.id}</td>
+              <td style="font-weight:700; color:#fff;">
+                <div>${ord.customer}</div>
+                ${ord.email ? `<div style="font-size:11px; color:var(--text-muted); font-weight:normal;">${ord.email}</div>` : ''}
+              </td>
+              <td>
+                <a href="tel:${cleanPhone}" style="color:var(--text-muted); text-decoration:none; font-weight:600;">
+                  <i class="fa-solid fa-phone" style="font-size:11px; margin-left:4px; color:var(--gold);"></i>${ord.phone || '-'}
                 </a>
-              ` : ''}
-              <button class="btn-action delete" style="padding:6px 8px; border-radius:8px;" onclick="deleteOrder('${ord.id}')" title="سڕینەوەی داواکاری">
-                <i class="fa-solid fa-trash" style="font-size:12px;"></i>
-              </button>
+              </td>
+              <td>
+                <div style="font-size:13px; font-weight:600; color:#e2e8f0;">${ord.city || '-'}</div>
+                <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">${ord.address || '-'}</div>
+              </td>
+              <td style="max-width:280px;">${itemsHtml}</td>
+              <td style="font-weight:800; color:var(--gold-light); font-size:14px;">${Number(ord.total).toLocaleString()} د.ع</td>
+              <td>${statusBadge}</td>
+              <td>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                  ${ord.status !== 'accepted' ? `<button class="btn-action" style="background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid rgba(34,197,94,0.3); padding:6px 10px;" onclick="updateOrderStatus('${ord.id}', 'accepted')" title="قبووڵکردن"><i class="fa-solid fa-check"></i></button>` : ''}
+                  ${ord.status !== 'rejected' ? `<button class="btn-action" style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3); padding:6px 10px;" onclick="promptRejectOrder('${ord.id}')" title="ڕەتکردنەوە"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                  <button class="btn-action delete" style="padding:6px 10px;" onclick="deleteOrder('${ord.id}')" title="سڕینەوە"><i class="fa-solid fa-trash"></i></button>
+                </div>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+      }
+
+      // Mobile Cards
+      if (mobileContainer) {
+        mobileContainer.innerHTML = '';
+        if (orders.length === 0) {
+          mobileContainer.innerHTML = `
+            <div class="empty-state" style="padding:40px 20px;">
+              <i class="fa-solid fa-cart-arrow-down" style="font-size:36px; color:var(--text-muted); margin-bottom:10px;"></i>
+              <h4 style="color:var(--text); font-weight:800;">هیچ داواکارییەک نییە</h4>
+              <p style="color:var(--text-muted); font-size:12px;">کاتێک کڕیارێک داواکاری دەنێرێت لێرە دەردەکەوێت.</p>
             </div>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
+          `;
+        } else {
+          orders.forEach(ord => {
+            const cleanPhone = (ord.phone || '').replace(/[^0-9]/g, '');
+            let statusBadgeHtml = '';
+            if (ord.status === 'accepted') {
+              statusBadgeHtml = '<span class="mob-status-pill green"><i class="fa-solid fa-truck-fast"></i> قبووڵکراوە</span>';
+            } else if (ord.status === 'rejected') {
+              statusBadgeHtml = '<span class="mob-status-pill red"><i class="fa-solid fa-xmark"></i> ڕەتکراوەتەوە</span>';
+            } else {
+              statusBadgeHtml = '<span class="mob-status-pill yellow"><i class="fa-solid fa-clock"></i> لە چاوەڕوانیدا</span>';
+            }
 
-    async function acceptOrder(orderId) {
-      const ord = orders.find(x => x.id === orderId);
-      if (!ord) return;
-      ord.status = 'accepted';
-      saveState();
-      renderOrders();
-      await updateOrderStatusInSupabase(orderId, 'accepted');
-      await sendOrderNotification({
-        title: 'ئۆردەرەکەت قبووڵکرا! 🚚',
-        title_en: 'Order Accepted! 🚚',
-        title_ar: 'تم قبول طلبك! 🚚',
-        body: 'داواکارییەکەت (#' + orderId.slice(0, 8) + ') قبووڵکراوە و ئامادەکراوە، لەم چەند ڕۆژەدا دەگاتە دەستت.',
-        body_en: 'Your order (#' + orderId.slice(0, 8) + ') has been approved and prepared. It will arrive in a few days.',
-        body_ar: 'تم قبول طلبك (#' + orderId.slice(0, 8) + ') وتجهيزه وسوف يصلك خلال هذه الأيام.',
-        category: 'ئۆردەر',
-        category_en: 'Order',
-        category_ar: 'طلب'
-      });
-      showToast('ئۆردەرەکە بە سەرکەوتوویی قبووڵکرا و نۆتیفیکەیشن بە کڕیار گەیشت ✓', 'success');
-    }
+            let itemsPills = '';
+            if (Array.isArray(ord.detailed_items) && ord.detailed_items.length > 0) {
+              itemsPills = ord.detailed_items.map(it => `
+                <div class="mob-order-item-chip">
+                  <span class="mob-item-name"><i class="fa-solid fa-shirt"></i> ${it.name}</span>
+                  <span class="mob-item-qty">×${it.quantity}</span>
+                  ${it.size ? `<span class="mob-sub-chip">قیاس: ${it.size}</span>` : ''}
+                  ${it.color ? `<span class="mob-sub-chip">ڕەنگ: ${it.color}</span>` : ''}
+                </div>
+              `).join('');
+            } else {
+              itemsPills = `<div style="font-size:12px; color:var(--text-muted);">${ord.items || '-'}</div>`;
+            }
 
-    async function rejectOrder(orderId) {
-      const ord = orders.find(x => x.id === orderId);
-      if (!ord) return;
-      const reason = prompt('تکایە هۆکاری ڕەتکردنەوە بنووسە (بۆ کڕیار دەنێردرێت):', 'تەواوبوونی ستۆک یان کێشەی گەیاندن');
-      if (reason === null) return;
-      const finalReason = reason.trim() || 'بەهۆی نەبوونی بەرهەم لە کۆگا';
-      ord.status = 'rejected';
-      ord.rejection_reason = finalReason;
-      saveState();
-      renderOrders();
-      await updateOrderStatusInSupabase(orderId, 'rejected', finalReason);
-      await sendOrderNotification({
-        title: 'داواکارییەکەت ڕەتکرایەوە ⚠️',
-        title_en: 'Order Declined ⚠️',
-        title_ar: 'تم رفض الطلب ⚠️',
-        body: 'داواکاری (#' + orderId.slice(0, 8) + ') ڕەتکرایەوە. هۆکار: ' + finalReason,
-        body_en: 'Your order (#' + orderId.slice(0, 8) + ') was declined. Reason: ' + finalReason,
-        body_ar: 'تم رفض طلبك (#' + orderId.slice(0, 8) + '). السبب: ' + finalReason,
-        category: 'ئۆردەر',
-        category_en: 'Order',
-        category_ar: 'طلب'
-      });
-      showToast('داواکاری ڕەتکرایەوە و هۆکارەکەی بۆ کڕیار نێردرا ✓', 'info');
-    }
-
-    function updateOrderStatus(orderId, newStatus) {
-      const ord = orders.find(x => x.id === orderId);
-      if (ord) {
-        ord.status = newStatus;
-        saveState();
-        renderOrders();
-        updateOrderStatusInSupabase(orderId, newStatus);
-        showToast('دۆخی داواکاری نوێکرایەوە ✓', 'info');
+            const card = document.createElement('div');
+            card.className = `mob-order-card ${ord.status || 'pending'}`;
+            card.innerHTML = `
+              <div class="mob-order-header">
+                <span class="mob-order-id">#${ord.id}</span>
+                ${statusBadgeHtml}
+              </div>
+              <div class="mob-order-body">
+                <div class="mob-customer-row">
+                  <div class="mob-customer-info">
+                    <span class="mob-customer-name"><i class="fa-solid fa-user"></i> ${ord.customer || 'کڕیار'}</span>
+                    <span class="mob-customer-city"><i class="fa-solid fa-location-dot"></i> ${ord.city || ''} ${ord.address || ''}</span>
+                  </div>
+                  ${cleanPhone ? `
+                    <a href="tel:${cleanPhone}" class="mob-call-btn" title="پەیوەندی تەلەفۆنی">
+                      <i class="fa-solid fa-phone"></i> پەیوەندی
+                    </a>
+                  ` : ''}
+                </div>
+                <div class="mob-items-box">
+                  ${itemsPills}
+                </div>
+                <div class="mob-order-footer">
+                  <div class="mob-total-box">
+                    <span class="mob-total-label">کۆی گشتی:</span>
+                    <span class="mob-total-val">${Number(ord.total).toLocaleString()} د.ع</span>
+                  </div>
+                  <div class="mob-order-actions">
+                    ${ord.status !== 'accepted' ? `
+                      <button class="mob-action-btn accept" onclick="updateOrderStatus('${ord.id}', 'accepted')" title="قبووڵکردن">
+                        <i class="fa-solid fa-check"></i> قبووڵ
+                      </button>
+                    ` : ''}
+                    ${ord.status !== 'rejected' ? `
+                      <button class="mob-action-btn reject" onclick="promptRejectOrder('${ord.id}')" title="ڕەتکردنەوە">
+                        <i class="fa-solid fa-xmark"></i> ڕەت
+                      </button>
+                    ` : ''}
+                    <button class="mob-action-btn delete" onclick="deleteOrder('${ord.id}')" title="سڕینەوە">
+                      <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+            mobileContainer.appendChild(card);
+          });
+        }
       }
     }
+
 
     async function deleteOrder(orderId) {
 
@@ -7513,10 +8123,154 @@ ALTER TABLE IF EXISTS profiles DISABLE ROW LEVEL SECURITY;</div>
       renderProducts();
 
       loadAllFromSupabase();
-
+      const userBox = document.getElementById('loginUsername');
+      const passBox = document.getElementById('loginPassword');
+      if (userBox) userBox.value = '';
+      if (passBox) passBox.value = '';
     });
 
   </script>
+
+
+  <!-- ============================================================== -->
+  <!-- FLOATING BOTTOM DOCK & ACTION SHEETS (CREATIVE UI INSPIRATION) -->
+  <!-- ============================================================== -->
+
+  <!-- Floating Bottom Pill Navigation Bar (Mobile Only) -->
+  <nav class="mobile-floating-dock" id="mobileFloatingDock">
+    <button class="dock-item active" onclick="switchTab('overview')" data-tab="overview">
+      <div class="dock-icon-box">
+        <i class="fa-solid fa-house"></i>
+        <span class="dock-active-dot"></span>
+      </div>
+      <span class="dock-label">سەرەکی</span>
+    </button>
+
+    <button class="dock-item" onclick="switchTab('products')" data-tab="products">
+      <div class="dock-icon-box">
+        <i class="fa-solid fa-boxes-stacked"></i>
+        <span class="dock-badge" id="dockProductBadge">0</span>
+        <span class="dock-active-dot"></span>
+      </div>
+      <span class="dock-label">کاڵاکان</span>
+    </button>
+
+    <!-- Elevated Center FAB Button -->
+    <div class="dock-fab-container">
+      <button class="dock-fab" onclick="openQuickActionSheet()" title="کردارە خێراکان">
+        <i class="fa-solid fa-plus"></i>
+      </button>
+    </div>
+
+    <button class="dock-item" onclick="switchTab('orders')" data-tab="orders">
+      <div class="dock-icon-box">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span class="dock-badge alert" id="dockOrderBadge">0</span>
+        <span class="dock-active-dot"></span>
+      </div>
+      <span class="dock-label">ئۆردەر</span>
+    </button>
+
+    <button class="dock-item" onclick="openMobileMenuSheet()" data-tab="menu">
+      <div class="dock-icon-box">
+        <i class="fa-solid fa-bars"></i>
+        <span class="dock-active-dot"></span>
+      </div>
+      <span class="dock-label">مێنیو</span>
+    </button>
+  </nav>
+
+  <!-- Quick Action Bottom Sheet -->
+  <div id="quickActionSheetBackdrop" class="sheet-backdrop" onclick="closeQuickActionSheet()"></div>
+  <div id="quickActionSheet" class="action-bottom-sheet">
+    <div class="sheet-handle" onclick="closeQuickActionSheet()"></div>
+    <div class="sheet-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="sheet-header-icon"><i class="fa-solid fa-bolt"></i></div>
+        <div>
+          <div style="font-size:16px; font-weight:800; color:#FFF;">کردارە خێراکان (Quick Actions)</div>
+          <div style="font-size:11px; color:var(--text-muted);">بە یەک کلیک لە مۆبایلەکەتەوە هەموو کارەکان بکە</div>
+        </div>
+      </div>
+      <button class="sheet-close-btn" onclick="closeQuickActionSheet()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="sheet-grid">
+      <button class="sheet-action-card" onclick="closeQuickActionSheet(); openAddProductModal();">
+        <div class="sheet-icon-circle blue"><i class="fa-solid fa-plus"></i></div>
+        <div class="sheet-action-text">
+          <span class="sheet-action-title">زیادکردنی کاڵا</span>
+          <span class="sheet-action-desc">کاڵای نوێ بۆ کۆگا</span>
+        </div>
+      </button>
+      <button class="sheet-action-card" onclick="closeQuickActionSheet(); openSendNotificationModal();">
+        <div class="sheet-icon-circle green"><i class="fa-solid fa-paper-plane"></i></div>
+        <div class="sheet-action-text">
+          <span class="sheet-action-title">ناردنی ئاگاداری</span>
+          <span class="sheet-action-desc">ڕاستەوخۆ بۆ ناو ئەپی کڕیاران</span>
+        </div>
+      </button>
+      <button class="sheet-action-card" onclick="closeQuickActionSheet(); openAddOfferModal();">
+        <div class="sheet-icon-circle orange"><i class="fa-solid fa-fire"></i></div>
+        <div class="sheet-action-text">
+          <span class="sheet-action-title">ئۆفەری داشکاندن</span>
+          <span class="sheet-action-desc">داشکاندنی نوێ بۆ کاڵاکان</span>
+        </div>
+      </button>
+      <button class="sheet-action-card" onclick="closeQuickActionSheet(); openAddBannerModal();">
+        <div class="sheet-icon-circle gold"><i class="fa-solid fa-image"></i></div>
+        <div class="sheet-action-text">
+          <span class="sheet-action-title">بانەری نوێ</span>
+          <span class="sheet-action-desc">سلایدی سەرەکی ئەپ</span>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Menu Sheet -->
+  <div id="mobileMenuSheetBackdrop" class="sheet-backdrop" onclick="closeMobileMenuSheet()"></div>
+  <div id="mobileMenuSheet" class="action-bottom-sheet">
+    <div class="sheet-handle" onclick="closeMobileMenuSheet()"></div>
+    <div class="sheet-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="sheet-header-icon" style="background:rgba(196,155,102,0.15); color:var(--gold);"><i class="fa-solid fa-layer-group"></i></div>
+        <div style="font-size:16px; font-weight:800; color:#FFF;">بەشەکانی تری دەشبۆرد</div>
+      </div>
+      <button class="sheet-close-btn" onclick="closeMobileMenuSheet()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="mobile-menu-grid">
+      <button class="mob-menu-btn" onclick="switchTab('offers')">
+        <i class="fa-solid fa-bolt" style="color:#F97316;"></i>
+        <span>ئۆفەرەکان و داشکاندن</span>
+        <span class="mob-menu-badge" id="mobOfferBadge">0</span>
+      </button>
+      <button class="mob-menu-btn" onclick="switchTab('banners')">
+        <i class="fa-solid fa-images" style="color:#EAB308;"></i>
+        <span>بانەرەکانی ئەپ</span>
+        <span class="mob-menu-badge" id="mobBannerBadge">0</span>
+      </button>
+      <button class="mob-menu-btn" onclick="switchTab('notifications')">
+        <i class="fa-solid fa-bell" style="color:#10B981;"></i>
+        <span>ئاگادارییەکان</span>
+        <span class="mob-menu-badge" id="mobNotifBadge">0</span>
+      </button>
+      <button class="mob-menu-btn" onclick="switchTab('shops')">
+        <i class="fa-solid fa-store" style="color:#8B5CF6;"></i>
+        <span>لق و دوکانەکان</span>
+      </button>
+      <button class="mob-menu-btn" onclick="switchTab('users')">
+        <i class="fa-solid fa-users" style="color:#3B82F6;"></i>
+        <span>بەکارهێنەرانی ئەپ</span>
+      </button>
+      <button class="mob-menu-btn" onclick="switchTab('settings')">
+        <i class="fa-solid fa-sliders" style="color:#94A3B8;"></i>
+        <span>ڕێکخستنەکان و داتابەیس</span>
+      </button>
+      <button class="mob-menu-btn logout" onclick="closeMobileMenuSheet(); handleLogout();">
+        <i class="fa-solid fa-arrow-right-from-bracket" style="color:#EF4444;"></i>
+        <span style="color:#EF4444;">چوونەدەرەوە لە دەشبۆرد</span>
+      </button>
+    </div>
+  </div>
 
 </body>
 
